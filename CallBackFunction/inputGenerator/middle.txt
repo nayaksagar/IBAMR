@@ -1,0 +1,29 @@
+   calculate_structure_linear_mom = TRUE
+   calculate_structure_rotational_mom = TRUE
+   
+   PrintOutput {
+   print_output          = TRUE               //default false
+   output_interval       = 100                  //default 1
+   output_drag           = TRUE               //default false
+   output_power          = FALSE              //default false
+   output_rig_transvel   = TRUE               //default false
+   output_rig_rotvel     = TRUE               //default false
+   output_com_coords     = TRUE               //default false
+   output_moment_inertia = TRUE               //default false
+   output_dirname        = "./Dump--Cylinder"    //default "./ConstraintIBMethodDump"
+   base_filename         = "SedimentingCylinder"      //default  "ImmersedStructure" 
+  }
+
+}
+
+// Particle radius
+particle_radius = 0.03125
+
+// Repulsive force parameters
+EPSILON_P = 0.0000815 
+GRAV_CONST = -980 * (RHO_S-RHO)
+XI = Hy
+
+
+
+//********************************** paste goestoinput.txt here ******************************************//

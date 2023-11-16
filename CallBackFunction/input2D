@@ -1,0 +1,4853 @@
+// Constants
+PI = 3.14159265
+MU = 0.1       // the viscosity required to attain the specified Reynolds number
+RHO = 1.0
+RHO_S = 1.01
+
+
+// grid spacing parameters
+MAX_LEVELS = 2                            // maximum number of levels in locally refined grid
+REF_RATIO  = 4                            // refinement ratio between levels
+Nx = 64                                    // actual    number of grid cells on coarsest grid level
+Ny = 64 
+Lx = 2.0                                  // width of computational domain
+Ly = 2.0
+NXFINEST = (REF_RATIO^(MAX_LEVELS - 1))*Nx  // Number of cells on the finest grid level
+NYFINEST = (REF_RATIO^(MAX_LEVELS - 1))*Ny
+Hx = Lx/NXFINEST
+Hy = Ly/NYFINEST
+
+
+// solver parameters
+DELTA_FUNCTION       = "IB_4"
+SOLVER_TYPE          = "STAGGERED"                // the fluid solver to use (STAGGERED or COLLOCATED)
+START_TIME           = 0.0e0                      // initial simulation time
+END_TIME             = 10.0                       // final simulation time
+MAX_INTEGRATOR_STEPS = 10000000000000             // Max no of steps.
+GROW_DT              = 2.0e0                      // growth factor for timesteps
+NUM_CYCLES           = 1                          // number of cycles of fixed-point iteration
+CONVECTIVE_OP_TYPE   = "PPM"                      // convective differencing discretization type
+CONVECTIVE_FORM      = "ADVECTIVE"                // how to compute the convective terms
+NORMALIZE_PRESSURE   = FALSE                      // whether to explicitly force the pressure to have mean zero
+CFL_MAX              = 0.3                        // maximum CFL number
+DT_MAX               = 0.001                     // maximum timestep size
+VORTICITY_TAGGING    = TRUE                       // whether to tag cells for refinement based on vorticity thresholds
+TAG_BUFFER           = 2                          // size of tag buffer used by grid generation algorithm
+REGRID_CFL_INTERVAL  = 0.3                        // regrid whenever any material point could have moved 0.5 meshwidths since previous regrid
+OUTPUT_U             = TRUE
+OUTPUT_P             = TRUE
+OUTPUT_F             = TRUE
+OUTPUT_OMEGA         = TRUE
+OUTPUT_DIV_U         = TRUE
+ENABLE_LOGGING       = TRUE
+
+// collocated solver parameters
+PROJECTION_METHOD_TYPE = "PRESSURE_UPDATE"
+SECOND_ORDER_PRESSURE_UPDATE = TRUE
+USE_EXACT_PROJECTION_METHOD = FALSE
+
+VelocityInitialConditions{
+   function_0 = "0.0"
+   funciton_1 = "0.0"
+}
+
+
+VelocityBcCoefs_0 {
+   acoef_function_0 = "1.0"
+   acoef_function_1 = "1.0"
+   acoef_function_2 = "1.0"
+   acoef_function_3 = "1.0"
+
+   bcoef_function_0 = "0.0"
+   bcoef_function_1 = "0.0"
+   bcoef_function_2 = "0.0"
+   bcoef_function_3 = "0.0"
+
+   gcoef_function_0 = "0.0"
+   gcoef_function_1 = "0.0"
+   gcoef_function_2 = "0.0"
+   gcoef_function_3 = "0.0"
+}
+
+VelocityBcCoefs_1 {
+   acoef_function_0 = "1.0"
+   acoef_function_1 = "1.0"
+   acoef_function_2 = "1.0"
+   acoef_function_3 = "1.0"
+
+   bcoef_function_0 = "0.0"
+   bcoef_function_1 = "0.0"
+   bcoef_function_2 = "0.0"
+   bcoef_function_3 = "0.0"
+
+   gcoef_function_0 = "0.0"
+   gcoef_function_1 = "0.0"
+   gcoef_function_2 = "0.0"
+   gcoef_function_3 = "0.0"
+}
+
+IBHierarchyIntegrator {
+   start_time           = START_TIME
+   end_time             = END_TIME
+   grow_dt              = GROW_DT
+   num_cycles           = NUM_CYCLES
+   regrid_cfl_interval  = REGRID_CFL_INTERVAL
+   dt_max               = DT_MAX
+   enable_logging       = ENABLE_LOGGING
+   max_integrator_steps = MAX_INTEGRATOR_STEPS
+   error_on_dt_change   = FALSE
+   warn_on_dt_change    = TRUE
+   time_stepping_method = "MIDPOINT_RULE"
+}
+
+ConstraintIBMethod {
+   delta_fcn                = DELTA_FUNCTION
+   enable_logging           = ENABLE_LOGGING
+   num_INS_cycles           = NUM_CYCLES
+   needs_divfree_projection = FALSE
+rho_solid = RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO 
+   calculate_structure_linear_mom = TRUE
+   calculate_structure_rotational_mom = TRUE
+   
+   PrintOutput {
+   print_output          = TRUE               //default false
+   output_interval       = 100                  //default 1
+   output_drag           = TRUE               //default false
+   output_power          = FALSE              //default false
+   output_rig_transvel   = TRUE               //default false
+   output_rig_rotvel     = TRUE               //default false
+   output_com_coords     = TRUE               //default false
+   output_moment_inertia = TRUE               //default false
+   output_dirname        = "./Dump--Cylinder"    //default "./ConstraintIBMethodDump"
+   base_filename         = "SedimentingCylinder"      //default  "ImmersedStructure" 
+  }
+
+}
+
+// Particle radius
+particle_radius = 0.03125
+
+// Repulsive force parameters
+EPSILON_P = 0.0000815 
+GRAV_CONST = -980 * (RHO_S-RHO)
+XI = Hy
+
+
+
+//********************************** paste goestoinput.txt here ******************************************//
+num_structures = 504
+ConstraintIBKinematics { 
+
+ structure_names =  "p_0", "p_1", "p_2", "p_3", "p_4", "p_5", "p_6", "p_7", "p_8", "p_9", "p_10", "p_11", "p_12", "p_13", "p_14", "p_15", "p_16", "p_17", "p_18", "p_19", "p_20", "p_21", "p_22", "p_23", "p_24", "p_25", "p_26", "p_27", "p_28", "p_29", "p_30", "p_31", "p_32", "p_33", "p_34", "p_35", "p_36", "p_37", "p_38", "p_39", "p_40", "p_41", "p_42", "p_43", "p_44", "p_45", "p_46", "p_47", "p_48", "p_49", "p_50", "p_51", "p_52", "p_53", "p_54", "p_55", "p_56", "p_57", "p_58", "p_59", "p_60", "p_61", "p_62", "p_63", "p_64", "p_65", "p_66", "p_67", "p_68", "p_69", "p_70", "p_71", "p_72", "p_73", "p_74", "p_75", "p_76", "p_77", "p_78", "p_79", "p_80", "p_81", "p_82", "p_83", "p_84", "p_85", "p_86", "p_87", "p_88", "p_89", "p_90", "p_91", "p_92", "p_93", "p_94", "p_95", "p_96", "p_97", "p_98", "p_99", "p_100", "p_101", "p_102", "p_103", "p_104", "p_105", "p_106", "p_107", "p_108", "p_109", "p_110", "p_111", "p_112", "p_113", "p_114", "p_115", "p_116", "p_117", "p_118", "p_119", "p_120", "p_121", "p_122", "p_123", "p_124", "p_125", "p_126", "p_127", "p_128", "p_129", "p_130", "p_131", "p_132", "p_133", "p_134", "p_135", "p_136", "p_137", "p_138", "p_139", "p_140", "p_141", "p_142", "p_143", "p_144", "p_145", "p_146", "p_147", "p_148", "p_149", "p_150", "p_151", "p_152", "p_153", "p_154", "p_155", "p_156", "p_157", "p_158", "p_159", "p_160", "p_161", "p_162", "p_163", "p_164", "p_165", "p_166", "p_167", "p_168", "p_169", "p_170", "p_171", "p_172", "p_173", "p_174", "p_175", "p_176", "p_177", "p_178", "p_179", "p_180", "p_181", "p_182", "p_183", "p_184", "p_185", "p_186", "p_187", "p_188", "p_189", "p_190", "p_191", "p_192", "p_193", "p_194", "p_195", "p_196", "p_197", "p_198", "p_199", "p_200", "p_201", "p_202", "p_203", "p_204", "p_205", "p_206", "p_207", "p_208", "p_209", "p_210", "p_211", "p_212", "p_213", "p_214", "p_215", "p_216", "p_217", "p_218", "p_219", "p_220", "p_221", "p_222", "p_223", "p_224", "p_225", "p_226", "p_227", "p_228", "p_229", "p_230", "p_231", "p_232", "p_233", "p_234", "p_235", "p_236", "p_237", "p_238", "p_239", "p_240", "p_241", "p_242", "p_243", "p_244", "p_245", "p_246", "p_247", "p_248", "p_249", "p_250", "p_251", "p_252", "p_253", "p_254", "p_255", "p_256", "p_257", "p_258", "p_259", "p_260", "p_261", "p_262", "p_263", "p_264", "p_265", "p_266", "p_267", "p_268", "p_269", "p_270", "p_271", "p_272", "p_273", "p_274", "p_275", "p_276", "p_277", "p_278", "p_279", "p_280", "p_281", "p_282", "p_283", "p_284", "p_285", "p_286", "p_287", "p_288", "p_289", "p_290", "p_291", "p_292", "p_293", "p_294", "p_295", "p_296", "p_297", "p_298", "p_299", "p_300", "p_301", "p_302", "p_303", "p_304", "p_305", "p_306", "p_307", "p_308", "p_309", "p_310", "p_311", "p_312", "p_313", "p_314", "p_315", "p_316", "p_317", "p_318", "p_319", "p_320", "p_321", "p_322", "p_323", "p_324", "p_325", "p_326", "p_327", "p_328", "p_329", "p_330", "p_331", "p_332", "p_333", "p_334", "p_335", "p_336", "p_337", "p_338", "p_339", "p_340", "p_341", "p_342", "p_343", "p_344", "p_345", "p_346", "p_347", "p_348", "p_349", "p_350", "p_351", "p_352", "p_353", "p_354", "p_355", "p_356", "p_357", "p_358", "p_359", "p_360", "p_361", "p_362", "p_363", "p_364", "p_365", "p_366", "p_367", "p_368", "p_369", "p_370", "p_371", "p_372", "p_373", "p_374", "p_375", "p_376", "p_377", "p_378", "p_379", "p_380", "p_381", "p_382", "p_383", "p_384", "p_385", "p_386", "p_387", "p_388", "p_389", "p_390", "p_391", "p_392", "p_393", "p_394", "p_395", "p_396", "p_397", "p_398", "p_399", "p_400", "p_401", "p_402", "p_403", "p_404", "p_405", "p_406", "p_407", "p_408", "p_409", "p_410", "p_411", "p_412", "p_413", "p_414", "p_415", "p_416", "p_417", "p_418", "p_419", "p_420", "p_421", "p_422", "p_423", "p_424", "p_425", "p_426", "p_427", "p_428", "p_429", "p_430", "p_431", "p_432", "p_433", "p_434", "p_435", "p_436", "p_437", "p_438", "p_439", "p_440", "p_441", "p_442", "p_443", "p_444", "p_445", "p_446", "p_447", "p_448", "p_449", "p_450", "p_451", "p_452", "p_453", "p_454", "p_455", "p_456", "p_457", "p_458", "p_459", "p_460", "p_461", "p_462", "p_463", "p_464", "p_465", "p_466", "p_467", "p_468", "p_469", "p_470", "p_471", "p_472", "p_473", "p_474", "p_475", "p_476", "p_477", "p_478", "p_479", "p_480", "p_481", "p_482", "p_483", "p_484", "p_485", "p_486", "p_487", "p_488", "p_489", "p_490", "p_491", "p_492", "p_493", "p_494", "p_495", "p_496", "p_497", "p_498", "p_499", "p_500", "p_501", "p_502", "p_503"
+ p_0 {  
+	structure_names         	 = "p_0" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_1 {  
+	structure_names         	 = "p_1" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_2 {  
+	structure_names         	 = "p_2" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_3 {  
+	structure_names         	 = "p_3" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_4 {  
+	structure_names         	 = "p_4" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_5 {  
+	structure_names         	 = "p_5" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_6 {  
+	structure_names         	 = "p_6" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_7 {  
+	structure_names         	 = "p_7" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_8 {  
+	structure_names         	 = "p_8" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_9 {  
+	structure_names         	 = "p_9" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_10 {  
+	structure_names         	 = "p_10" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_11 {  
+	structure_names         	 = "p_11" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_12 {  
+	structure_names         	 = "p_12" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_13 {  
+	structure_names         	 = "p_13" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_14 {  
+	structure_names         	 = "p_14" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_15 {  
+	structure_names         	 = "p_15" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_16 {  
+	structure_names         	 = "p_16" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_17 {  
+	structure_names         	 = "p_17" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_18 {  
+	structure_names         	 = "p_18" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_19 {  
+	structure_names         	 = "p_19" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_20 {  
+	structure_names         	 = "p_20" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_21 {  
+	structure_names         	 = "p_21" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_22 {  
+	structure_names         	 = "p_22" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_23 {  
+	structure_names         	 = "p_23" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_24 {  
+	structure_names         	 = "p_24" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_25 {  
+	structure_names         	 = "p_25" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_26 {  
+	structure_names         	 = "p_26" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_27 {  
+	structure_names         	 = "p_27" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_28 {  
+	structure_names         	 = "p_28" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_29 {  
+	structure_names         	 = "p_29" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_30 {  
+	structure_names         	 = "p_30" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_31 {  
+	structure_names         	 = "p_31" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_32 {  
+	structure_names         	 = "p_32" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_33 {  
+	structure_names         	 = "p_33" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_34 {  
+	structure_names         	 = "p_34" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_35 {  
+	structure_names         	 = "p_35" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_36 {  
+	structure_names         	 = "p_36" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_37 {  
+	structure_names         	 = "p_37" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_38 {  
+	structure_names         	 = "p_38" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_39 {  
+	structure_names         	 = "p_39" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_40 {  
+	structure_names         	 = "p_40" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_41 {  
+	structure_names         	 = "p_41" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_42 {  
+	structure_names         	 = "p_42" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_43 {  
+	structure_names         	 = "p_43" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_44 {  
+	structure_names         	 = "p_44" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_45 {  
+	structure_names         	 = "p_45" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_46 {  
+	structure_names         	 = "p_46" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_47 {  
+	structure_names         	 = "p_47" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_48 {  
+	structure_names         	 = "p_48" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_49 {  
+	structure_names         	 = "p_49" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_50 {  
+	structure_names         	 = "p_50" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_51 {  
+	structure_names         	 = "p_51" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_52 {  
+	structure_names         	 = "p_52" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_53 {  
+	structure_names         	 = "p_53" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_54 {  
+	structure_names         	 = "p_54" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_55 {  
+	structure_names         	 = "p_55" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_56 {  
+	structure_names         	 = "p_56" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_57 {  
+	structure_names         	 = "p_57" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_58 {  
+	structure_names         	 = "p_58" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_59 {  
+	structure_names         	 = "p_59" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_60 {  
+	structure_names         	 = "p_60" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_61 {  
+	structure_names         	 = "p_61" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_62 {  
+	structure_names         	 = "p_62" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_63 {  
+	structure_names         	 = "p_63" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_64 {  
+	structure_names         	 = "p_64" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_65 {  
+	structure_names         	 = "p_65" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_66 {  
+	structure_names         	 = "p_66" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_67 {  
+	structure_names         	 = "p_67" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_68 {  
+	structure_names         	 = "p_68" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_69 {  
+	structure_names         	 = "p_69" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_70 {  
+	structure_names         	 = "p_70" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_71 {  
+	structure_names         	 = "p_71" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_72 {  
+	structure_names         	 = "p_72" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_73 {  
+	structure_names         	 = "p_73" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_74 {  
+	structure_names         	 = "p_74" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_75 {  
+	structure_names         	 = "p_75" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_76 {  
+	structure_names         	 = "p_76" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_77 {  
+	structure_names         	 = "p_77" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_78 {  
+	structure_names         	 = "p_78" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_79 {  
+	structure_names         	 = "p_79" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_80 {  
+	structure_names         	 = "p_80" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_81 {  
+	structure_names         	 = "p_81" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_82 {  
+	structure_names         	 = "p_82" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_83 {  
+	structure_names         	 = "p_83" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_84 {  
+	structure_names         	 = "p_84" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_85 {  
+	structure_names         	 = "p_85" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_86 {  
+	structure_names         	 = "p_86" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_87 {  
+	structure_names         	 = "p_87" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_88 {  
+	structure_names         	 = "p_88" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_89 {  
+	structure_names         	 = "p_89" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_90 {  
+	structure_names         	 = "p_90" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_91 {  
+	structure_names         	 = "p_91" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_92 {  
+	structure_names         	 = "p_92" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_93 {  
+	structure_names         	 = "p_93" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_94 {  
+	structure_names         	 = "p_94" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_95 {  
+	structure_names         	 = "p_95" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_96 {  
+	structure_names         	 = "p_96" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_97 {  
+	structure_names         	 = "p_97" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_98 {  
+	structure_names         	 = "p_98" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_99 {  
+	structure_names         	 = "p_99" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_100 {  
+	structure_names         	 = "p_100" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_101 {  
+	structure_names         	 = "p_101" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_102 {  
+	structure_names         	 = "p_102" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_103 {  
+	structure_names         	 = "p_103" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_104 {  
+	structure_names         	 = "p_104" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_105 {  
+	structure_names         	 = "p_105" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_106 {  
+	structure_names         	 = "p_106" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_107 {  
+	structure_names         	 = "p_107" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_108 {  
+	structure_names         	 = "p_108" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_109 {  
+	structure_names         	 = "p_109" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_110 {  
+	structure_names         	 = "p_110" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_111 {  
+	structure_names         	 = "p_111" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_112 {  
+	structure_names         	 = "p_112" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_113 {  
+	structure_names         	 = "p_113" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_114 {  
+	structure_names         	 = "p_114" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_115 {  
+	structure_names         	 = "p_115" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_116 {  
+	structure_names         	 = "p_116" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_117 {  
+	structure_names         	 = "p_117" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_118 {  
+	structure_names         	 = "p_118" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_119 {  
+	structure_names         	 = "p_119" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_120 {  
+	structure_names         	 = "p_120" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_121 {  
+	structure_names         	 = "p_121" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_122 {  
+	structure_names         	 = "p_122" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_123 {  
+	structure_names         	 = "p_123" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_124 {  
+	structure_names         	 = "p_124" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_125 {  
+	structure_names         	 = "p_125" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_126 {  
+	structure_names         	 = "p_126" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_127 {  
+	structure_names         	 = "p_127" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_128 {  
+	structure_names         	 = "p_128" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_129 {  
+	structure_names         	 = "p_129" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_130 {  
+	structure_names         	 = "p_130" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_131 {  
+	structure_names         	 = "p_131" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_132 {  
+	structure_names         	 = "p_132" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_133 {  
+	structure_names         	 = "p_133" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_134 {  
+	structure_names         	 = "p_134" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_135 {  
+	structure_names         	 = "p_135" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_136 {  
+	structure_names         	 = "p_136" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_137 {  
+	structure_names         	 = "p_137" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_138 {  
+	structure_names         	 = "p_138" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_139 {  
+	structure_names         	 = "p_139" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_140 {  
+	structure_names         	 = "p_140" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_141 {  
+	structure_names         	 = "p_141" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_142 {  
+	structure_names         	 = "p_142" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_143 {  
+	structure_names         	 = "p_143" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_144 {  
+	structure_names         	 = "p_144" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_145 {  
+	structure_names         	 = "p_145" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_146 {  
+	structure_names         	 = "p_146" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_147 {  
+	structure_names         	 = "p_147" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_148 {  
+	structure_names         	 = "p_148" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_149 {  
+	structure_names         	 = "p_149" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_150 {  
+	structure_names         	 = "p_150" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_151 {  
+	structure_names         	 = "p_151" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_152 {  
+	structure_names         	 = "p_152" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_153 {  
+	structure_names         	 = "p_153" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_154 {  
+	structure_names         	 = "p_154" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_155 {  
+	structure_names         	 = "p_155" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_156 {  
+	structure_names         	 = "p_156" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_157 {  
+	structure_names         	 = "p_157" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_158 {  
+	structure_names         	 = "p_158" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_159 {  
+	structure_names         	 = "p_159" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_160 {  
+	structure_names         	 = "p_160" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_161 {  
+	structure_names         	 = "p_161" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_162 {  
+	structure_names         	 = "p_162" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_163 {  
+	structure_names         	 = "p_163" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_164 {  
+	structure_names         	 = "p_164" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_165 {  
+	structure_names         	 = "p_165" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_166 {  
+	structure_names         	 = "p_166" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_167 {  
+	structure_names         	 = "p_167" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_168 {  
+	structure_names         	 = "p_168" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_169 {  
+	structure_names         	 = "p_169" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_170 {  
+	structure_names         	 = "p_170" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_171 {  
+	structure_names         	 = "p_171" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_172 {  
+	structure_names         	 = "p_172" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_173 {  
+	structure_names         	 = "p_173" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_174 {  
+	structure_names         	 = "p_174" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_175 {  
+	structure_names         	 = "p_175" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_176 {  
+	structure_names         	 = "p_176" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_177 {  
+	structure_names         	 = "p_177" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_178 {  
+	structure_names         	 = "p_178" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_179 {  
+	structure_names         	 = "p_179" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_180 {  
+	structure_names         	 = "p_180" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_181 {  
+	structure_names         	 = "p_181" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_182 {  
+	structure_names         	 = "p_182" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_183 {  
+	structure_names         	 = "p_183" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_184 {  
+	structure_names         	 = "p_184" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_185 {  
+	structure_names         	 = "p_185" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_186 {  
+	structure_names         	 = "p_186" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_187 {  
+	structure_names         	 = "p_187" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_188 {  
+	structure_names         	 = "p_188" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_189 {  
+	structure_names         	 = "p_189" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_190 {  
+	structure_names         	 = "p_190" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_191 {  
+	structure_names         	 = "p_191" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_192 {  
+	structure_names         	 = "p_192" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_193 {  
+	structure_names         	 = "p_193" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_194 {  
+	structure_names         	 = "p_194" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_195 {  
+	structure_names         	 = "p_195" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_196 {  
+	structure_names         	 = "p_196" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_197 {  
+	structure_names         	 = "p_197" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_198 {  
+	structure_names         	 = "p_198" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_199 {  
+	structure_names         	 = "p_199" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_200 {  
+	structure_names         	 = "p_200" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_201 {  
+	structure_names         	 = "p_201" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_202 {  
+	structure_names         	 = "p_202" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_203 {  
+	structure_names         	 = "p_203" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_204 {  
+	structure_names         	 = "p_204" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_205 {  
+	structure_names         	 = "p_205" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_206 {  
+	structure_names         	 = "p_206" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_207 {  
+	structure_names         	 = "p_207" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_208 {  
+	structure_names         	 = "p_208" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_209 {  
+	structure_names         	 = "p_209" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_210 {  
+	structure_names         	 = "p_210" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_211 {  
+	structure_names         	 = "p_211" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_212 {  
+	structure_names         	 = "p_212" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_213 {  
+	structure_names         	 = "p_213" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_214 {  
+	structure_names         	 = "p_214" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_215 {  
+	structure_names         	 = "p_215" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_216 {  
+	structure_names         	 = "p_216" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_217 {  
+	structure_names         	 = "p_217" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_218 {  
+	structure_names         	 = "p_218" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_219 {  
+	structure_names         	 = "p_219" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_220 {  
+	structure_names         	 = "p_220" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_221 {  
+	structure_names         	 = "p_221" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_222 {  
+	structure_names         	 = "p_222" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_223 {  
+	structure_names         	 = "p_223" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_224 {  
+	structure_names         	 = "p_224" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_225 {  
+	structure_names         	 = "p_225" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_226 {  
+	structure_names         	 = "p_226" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_227 {  
+	structure_names         	 = "p_227" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_228 {  
+	structure_names         	 = "p_228" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_229 {  
+	structure_names         	 = "p_229" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_230 {  
+	structure_names         	 = "p_230" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_231 {  
+	structure_names         	 = "p_231" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_232 {  
+	structure_names         	 = "p_232" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_233 {  
+	structure_names         	 = "p_233" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_234 {  
+	structure_names         	 = "p_234" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_235 {  
+	structure_names         	 = "p_235" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_236 {  
+	structure_names         	 = "p_236" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_237 {  
+	structure_names         	 = "p_237" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_238 {  
+	structure_names         	 = "p_238" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_239 {  
+	structure_names         	 = "p_239" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_240 {  
+	structure_names         	 = "p_240" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_241 {  
+	structure_names         	 = "p_241" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_242 {  
+	structure_names         	 = "p_242" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_243 {  
+	structure_names         	 = "p_243" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_244 {  
+	structure_names         	 = "p_244" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_245 {  
+	structure_names         	 = "p_245" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_246 {  
+	structure_names         	 = "p_246" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_247 {  
+	structure_names         	 = "p_247" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_248 {  
+	structure_names         	 = "p_248" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_249 {  
+	structure_names         	 = "p_249" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_250 {  
+	structure_names         	 = "p_250" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_251 {  
+	structure_names         	 = "p_251" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_252 {  
+	structure_names         	 = "p_252" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_253 {  
+	structure_names         	 = "p_253" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_254 {  
+	structure_names         	 = "p_254" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_255 {  
+	structure_names         	 = "p_255" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_256 {  
+	structure_names         	 = "p_256" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_257 {  
+	structure_names         	 = "p_257" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_258 {  
+	structure_names         	 = "p_258" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_259 {  
+	structure_names         	 = "p_259" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_260 {  
+	structure_names         	 = "p_260" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_261 {  
+	structure_names         	 = "p_261" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_262 {  
+	structure_names         	 = "p_262" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_263 {  
+	structure_names         	 = "p_263" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_264 {  
+	structure_names         	 = "p_264" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_265 {  
+	structure_names         	 = "p_265" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_266 {  
+	structure_names         	 = "p_266" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_267 {  
+	structure_names         	 = "p_267" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_268 {  
+	structure_names         	 = "p_268" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_269 {  
+	structure_names         	 = "p_269" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_270 {  
+	structure_names         	 = "p_270" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_271 {  
+	structure_names         	 = "p_271" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_272 {  
+	structure_names         	 = "p_272" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_273 {  
+	structure_names         	 = "p_273" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_274 {  
+	structure_names         	 = "p_274" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_275 {  
+	structure_names         	 = "p_275" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_276 {  
+	structure_names         	 = "p_276" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_277 {  
+	structure_names         	 = "p_277" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_278 {  
+	structure_names         	 = "p_278" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_279 {  
+	structure_names         	 = "p_279" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_280 {  
+	structure_names         	 = "p_280" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_281 {  
+	structure_names         	 = "p_281" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_282 {  
+	structure_names         	 = "p_282" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_283 {  
+	structure_names         	 = "p_283" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_284 {  
+	structure_names         	 = "p_284" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_285 {  
+	structure_names         	 = "p_285" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_286 {  
+	structure_names         	 = "p_286" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_287 {  
+	structure_names         	 = "p_287" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_288 {  
+	structure_names         	 = "p_288" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_289 {  
+	structure_names         	 = "p_289" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_290 {  
+	structure_names         	 = "p_290" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_291 {  
+	structure_names         	 = "p_291" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_292 {  
+	structure_names         	 = "p_292" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_293 {  
+	structure_names         	 = "p_293" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_294 {  
+	structure_names         	 = "p_294" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_295 {  
+	structure_names         	 = "p_295" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_296 {  
+	structure_names         	 = "p_296" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_297 {  
+	structure_names         	 = "p_297" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_298 {  
+	structure_names         	 = "p_298" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_299 {  
+	structure_names         	 = "p_299" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_300 {  
+	structure_names         	 = "p_300" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_301 {  
+	structure_names         	 = "p_301" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_302 {  
+	structure_names         	 = "p_302" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_303 {  
+	structure_names         	 = "p_303" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_304 {  
+	structure_names         	 = "p_304" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_305 {  
+	structure_names         	 = "p_305" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_306 {  
+	structure_names         	 = "p_306" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_307 {  
+	structure_names         	 = "p_307" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_308 {  
+	structure_names         	 = "p_308" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_309 {  
+	structure_names         	 = "p_309" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_310 {  
+	structure_names         	 = "p_310" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_311 {  
+	structure_names         	 = "p_311" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_312 {  
+	structure_names         	 = "p_312" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_313 {  
+	structure_names         	 = "p_313" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_314 {  
+	structure_names         	 = "p_314" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_315 {  
+	structure_names         	 = "p_315" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_316 {  
+	structure_names         	 = "p_316" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_317 {  
+	structure_names         	 = "p_317" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_318 {  
+	structure_names         	 = "p_318" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_319 {  
+	structure_names         	 = "p_319" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_320 {  
+	structure_names         	 = "p_320" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_321 {  
+	structure_names         	 = "p_321" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_322 {  
+	structure_names         	 = "p_322" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_323 {  
+	structure_names         	 = "p_323" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_324 {  
+	structure_names         	 = "p_324" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_325 {  
+	structure_names         	 = "p_325" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_326 {  
+	structure_names         	 = "p_326" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_327 {  
+	structure_names         	 = "p_327" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_328 {  
+	structure_names         	 = "p_328" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_329 {  
+	structure_names         	 = "p_329" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_330 {  
+	structure_names         	 = "p_330" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_331 {  
+	structure_names         	 = "p_331" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_332 {  
+	structure_names         	 = "p_332" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_333 {  
+	structure_names         	 = "p_333" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_334 {  
+	structure_names         	 = "p_334" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_335 {  
+	structure_names         	 = "p_335" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_336 {  
+	structure_names         	 = "p_336" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_337 {  
+	structure_names         	 = "p_337" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_338 {  
+	structure_names         	 = "p_338" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_339 {  
+	structure_names         	 = "p_339" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_340 {  
+	structure_names         	 = "p_340" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_341 {  
+	structure_names         	 = "p_341" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_342 {  
+	structure_names         	 = "p_342" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_343 {  
+	structure_names         	 = "p_343" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_344 {  
+	structure_names         	 = "p_344" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_345 {  
+	structure_names         	 = "p_345" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_346 {  
+	structure_names         	 = "p_346" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_347 {  
+	structure_names         	 = "p_347" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_348 {  
+	structure_names         	 = "p_348" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_349 {  
+	structure_names         	 = "p_349" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_350 {  
+	structure_names         	 = "p_350" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_351 {  
+	structure_names         	 = "p_351" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_352 {  
+	structure_names         	 = "p_352" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_353 {  
+	structure_names         	 = "p_353" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_354 {  
+	structure_names         	 = "p_354" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_355 {  
+	structure_names         	 = "p_355" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_356 {  
+	structure_names         	 = "p_356" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_357 {  
+	structure_names         	 = "p_357" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_358 {  
+	structure_names         	 = "p_358" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_359 {  
+	structure_names         	 = "p_359" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_360 {  
+	structure_names         	 = "p_360" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_361 {  
+	structure_names         	 = "p_361" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_362 {  
+	structure_names         	 = "p_362" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_363 {  
+	structure_names         	 = "p_363" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_364 {  
+	structure_names         	 = "p_364" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_365 {  
+	structure_names         	 = "p_365" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_366 {  
+	structure_names         	 = "p_366" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_367 {  
+	structure_names         	 = "p_367" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_368 {  
+	structure_names         	 = "p_368" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_369 {  
+	structure_names         	 = "p_369" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_370 {  
+	structure_names         	 = "p_370" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_371 {  
+	structure_names         	 = "p_371" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_372 {  
+	structure_names         	 = "p_372" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_373 {  
+	structure_names         	 = "p_373" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_374 {  
+	structure_names         	 = "p_374" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_375 {  
+	structure_names         	 = "p_375" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_376 {  
+	structure_names         	 = "p_376" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_377 {  
+	structure_names         	 = "p_377" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_378 {  
+	structure_names         	 = "p_378" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_379 {  
+	structure_names         	 = "p_379" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_380 {  
+	structure_names         	 = "p_380" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_381 {  
+	structure_names         	 = "p_381" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_382 {  
+	structure_names         	 = "p_382" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_383 {  
+	structure_names         	 = "p_383" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_384 {  
+	structure_names         	 = "p_384" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_385 {  
+	structure_names         	 = "p_385" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_386 {  
+	structure_names         	 = "p_386" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_387 {  
+	structure_names         	 = "p_387" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_388 {  
+	structure_names         	 = "p_388" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_389 {  
+	structure_names         	 = "p_389" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_390 {  
+	structure_names         	 = "p_390" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_391 {  
+	structure_names         	 = "p_391" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_392 {  
+	structure_names         	 = "p_392" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_393 {  
+	structure_names         	 = "p_393" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_394 {  
+	structure_names         	 = "p_394" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_395 {  
+	structure_names         	 = "p_395" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_396 {  
+	structure_names         	 = "p_396" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_397 {  
+	structure_names         	 = "p_397" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_398 {  
+	structure_names         	 = "p_398" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_399 {  
+	structure_names         	 = "p_399" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_400 {  
+	structure_names         	 = "p_400" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_401 {  
+	structure_names         	 = "p_401" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_402 {  
+	structure_names         	 = "p_402" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_403 {  
+	structure_names         	 = "p_403" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_404 {  
+	structure_names         	 = "p_404" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_405 {  
+	structure_names         	 = "p_405" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_406 {  
+	structure_names         	 = "p_406" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_407 {  
+	structure_names         	 = "p_407" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_408 {  
+	structure_names         	 = "p_408" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_409 {  
+	structure_names         	 = "p_409" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_410 {  
+	structure_names         	 = "p_410" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_411 {  
+	structure_names         	 = "p_411" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_412 {  
+	structure_names         	 = "p_412" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_413 {  
+	structure_names         	 = "p_413" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_414 {  
+	structure_names         	 = "p_414" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_415 {  
+	structure_names         	 = "p_415" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_416 {  
+	structure_names         	 = "p_416" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_417 {  
+	structure_names         	 = "p_417" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_418 {  
+	structure_names         	 = "p_418" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_419 {  
+	structure_names         	 = "p_419" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_420 {  
+	structure_names         	 = "p_420" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_421 {  
+	structure_names         	 = "p_421" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_422 {  
+	structure_names         	 = "p_422" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_423 {  
+	structure_names         	 = "p_423" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_424 {  
+	structure_names         	 = "p_424" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_425 {  
+	structure_names         	 = "p_425" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_426 {  
+	structure_names         	 = "p_426" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_427 {  
+	structure_names         	 = "p_427" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_428 {  
+	structure_names         	 = "p_428" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_429 {  
+	structure_names         	 = "p_429" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_430 {  
+	structure_names         	 = "p_430" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_431 {  
+	structure_names         	 = "p_431" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_432 {  
+	structure_names         	 = "p_432" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_433 {  
+	structure_names         	 = "p_433" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_434 {  
+	structure_names         	 = "p_434" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_435 {  
+	structure_names         	 = "p_435" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_436 {  
+	structure_names         	 = "p_436" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_437 {  
+	structure_names         	 = "p_437" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_438 {  
+	structure_names         	 = "p_438" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_439 {  
+	structure_names         	 = "p_439" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_440 {  
+	structure_names         	 = "p_440" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_441 {  
+	structure_names         	 = "p_441" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_442 {  
+	structure_names         	 = "p_442" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_443 {  
+	structure_names         	 = "p_443" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_444 {  
+	structure_names         	 = "p_444" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_445 {  
+	structure_names         	 = "p_445" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_446 {  
+	structure_names         	 = "p_446" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_447 {  
+	structure_names         	 = "p_447" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_448 {  
+	structure_names         	 = "p_448" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_449 {  
+	structure_names         	 = "p_449" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_450 {  
+	structure_names         	 = "p_450" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_451 {  
+	structure_names         	 = "p_451" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_452 {  
+	structure_names         	 = "p_452" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_453 {  
+	structure_names         	 = "p_453" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_454 {  
+	structure_names         	 = "p_454" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_455 {  
+	structure_names         	 = "p_455" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_456 {  
+	structure_names         	 = "p_456" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_457 {  
+	structure_names         	 = "p_457" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_458 {  
+	structure_names         	 = "p_458" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_459 {  
+	structure_names         	 = "p_459" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_460 {  
+	structure_names         	 = "p_460" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_461 {  
+	structure_names         	 = "p_461" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_462 {  
+	structure_names         	 = "p_462" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_463 {  
+	structure_names         	 = "p_463" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_464 {  
+	structure_names         	 = "p_464" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_465 {  
+	structure_names         	 = "p_465" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_466 {  
+	structure_names         	 = "p_466" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_467 {  
+	structure_names         	 = "p_467" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_468 {  
+	structure_names         	 = "p_468" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_469 {  
+	structure_names         	 = "p_469" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_470 {  
+	structure_names         	 = "p_470" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_471 {  
+	structure_names         	 = "p_471" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_472 {  
+	structure_names         	 = "p_472" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_473 {  
+	structure_names         	 = "p_473" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_474 {  
+	structure_names         	 = "p_474" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_475 {  
+	structure_names         	 = "p_475" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_476 {  
+	structure_names         	 = "p_476" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_477 {  
+	structure_names         	 = "p_477" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_478 {  
+	structure_names         	 = "p_478" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_479 {  
+	structure_names         	 = "p_479" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_480 {  
+	structure_names         	 = "p_480" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_481 {  
+	structure_names         	 = "p_481" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_482 {  
+	structure_names         	 = "p_482" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_483 {  
+	structure_names         	 = "p_483" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_484 {  
+	structure_names         	 = "p_484" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_485 {  
+	structure_names         	 = "p_485" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_486 {  
+	structure_names         	 = "p_486" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_487 {  
+	structure_names         	 = "p_487" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_488 {  
+	structure_names         	 = "p_488" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_489 {  
+	structure_names         	 = "p_489" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_490 {  
+	structure_names         	 = "p_490" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_491 {  
+	structure_names         	 = "p_491" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_492 {  
+	structure_names         	 = "p_492" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_493 {  
+	structure_names         	 = "p_493" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_494 {  
+	structure_names         	 = "p_494" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_495 {  
+	structure_names         	 = "p_495" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_496 {  
+	structure_names         	 = "p_496" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_497 {  
+	structure_names         	 = "p_497" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_498 {  
+	structure_names         	 = "p_498" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_499 {  
+	structure_names         	 = "p_499" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_500 {  
+	structure_names         	 = "p_500" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_501 {  
+	structure_names         	 = "p_501" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_502 {  
+	structure_names         	 = "p_502" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY"
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+} 
+
+p_503 {  
+	structure_names         	 = "p_503" 
+	structure_levels                 =  MAX_LEVELS - 1 
+	calculate_translational_momentum = 1,1,0 
+	calculate_rotational_momentum    = 0,0,1 
+	lag_position_update_method       = "CONSTRAINT_VELOCITY" 
+	tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+}
+
+}
+
+IBRedundantInitializer { 
+
+ max_levels      = MAX_LEVELS 
+ } 
+//********************************************************************************************************//
+
+ForceProjector {
+
+ rho_fluid = RHO
+ gravitational_constant = 0.0,GRAV_CONST,0.0
+ 
+ eps_P      = EPSILON_P
+ eps_W      = 0.5*eps_P
+ xi         = XI
+ particle_radius = particle_radius
+ num_of_particles = num_structures   //-1 because last one is porous media
+
+}
+
+INSStaggeredHierarchyIntegrator {
+   mu                         = MU
+   rho                        = RHO
+   start_time                 = START_TIME
+   end_time                   = END_TIME
+   grow_dt                    = GROW_DT
+   convective_op_type         = CONVECTIVE_OP_TYPE
+   convective_difference_form = CONVECTIVE_FORM
+   normalize_pressure         = NORMALIZE_PRESSURE
+   cfl                        = CFL_MAX
+   dt_max                     = DT_MAX
+   using_vorticity_tagging    = VORTICITY_TAGGING
+   vorticity_rel_thresh       = 0.25
+   tag_buffer                 = TAG_BUFFER
+   output_U                   = OUTPUT_U
+   output_P                   = OUTPUT_P
+   output_F                   = OUTPUT_F
+   output_Omega               = OUTPUT_OMEGA
+   output_Div_U               = OUTPUT_DIV_U
+   enable_logging             = ENABLE_LOGGING
+
+   VelocityHypreSolver {
+      solver_type           = "Split"
+      split_solver_type     = "PFMG"
+      relative_residual_tol = 1.0e-12
+      max_iterations        = 1
+      enable_logging        = FALSE
+   }
+
+   VelocityFACSolver {
+      num_pre_sweeps  = 0
+      num_post_sweeps = 1
+      coarse_solver_choice = "hypre"
+      coarse_solver_tolerance = 1.0e-12
+      coarse_solver_max_iterations = 1
+      prolongation_method = "CONSTANT_REFINE"
+      restriction_method  = "CONSERVATIVE_COARSEN"
+      hypre_solver {
+         solver_type           = "Split"
+         split_solver_type     = "PFMG"
+         relative_residual_tol = 1.0e-12
+         max_iterations        = 1
+         enable_logging        = FALSE
+      }
+   }
+
+   PressureHypreSolver {
+      solver_type           = "PFMG"
+      rap_type              = 0
+      relax_type            = 2
+      skip_relax            = 1
+      num_pre_relax_steps   = 2
+      num_post_relax_steps  = 2
+      relative_residual_tol = 1.0e-2
+      max_iterations        = 100
+      enable_logging        = FALSE
+   }
+
+   PressureFACSolver {
+      num_pre_sweeps  = 0
+      num_post_sweeps = 3
+      coarse_solver_choice = "hypre"
+      coarse_solver_tolerance = 1.0e-12
+      coarse_solver_max_iterations = 1
+      prolongation_method = "LINEAR_REFINE"
+      restriction_method  = "CONSERVATIVE_COARSEN"
+      hypre_solver {
+         solver_type           = "PFMG"
+         rap_type              = 0
+         relax_type            = 2
+         skip_relax            = 1
+         num_pre_relax_steps   = 0
+         num_post_relax_steps  = 3
+         relative_residual_tol = 1.0e-12
+         max_iterations        = 1
+         enable_logging        = FALSE
+      }
+   }
+}
+
+Main {
+   solver_type = SOLVER_TYPE
+
+	// log file parameters
+	log_file_name               = "Cylinder.log"
+	log_all_nodes               = FALSE
+
+	// visualization dump parameters
+	viz_writer                  = "VisIt","Silo"
+	viz_dump_interval           = 100                   // zero to turn off
+	viz_dump_dirname            = "viz_FC"
+	visit_number_procs_per_file = 1
+
+	// restart dump parameters
+	restart_dump_interval       = 500                  // zero to turn off
+	restart_dump_dirname        = "restart_IB2d"
+
+	// hierarchy data dump parameters
+	data_dump_interval          = 0                     // zero to turn off
+	data_dump_dirname           = "hier_data_IB2d"
+
+	// timer dump parameters
+	timer_dump_interval         = 500                    // zero to turn off
+}
+
+CartesianGeometry {
+   domain_boxes = [ (0,0) , ( Nx, Ny) ]
+   x_lo         =   0.0,   0.0           // lower end of computational domain.
+   x_up         =   Lx,   Ly         // upper end of computational domain.
+   periodic_dimension = 0, 0
+}
+
+GriddingAlgorithm {
+   max_levels = MAX_LEVELS           // Maximum number of levels in hierarchy.
+   ratio_to_coarser {
+      level_1 = REF_RATIO,REF_RATIO  // vector ratio to next coarser level
+      level_2 = REF_RATIO,REF_RATIO
+      level_3 = REF_RATIO,REF_RATIO
+      level_4 = REF_RATIO,REF_RATIO
+      level_5 = REF_RATIO,REF_RATIO
+      level_6 = REF_RATIO,REF_RATIO
+      level_7 = REF_RATIO,REF_RATIO
+   }
+
+   largest_patch_size {
+      level_0 = 2048, 2048 // largest patch allowed in hierarchy
+                          // all finer levels will use same values as level_0...
+   }
+
+   smallest_patch_size {
+      level_0 =  8, 8 // smallest patch allowed in hierarchy
+                            // all finer levels will use same values as level_0...
+   }
+
+   allow_patches_smaller_than_minimum_size_to_prevent_overlaps = TRUE
+   efficiency_tolerance   = 0.80e0    // min % of tag cells in new patch level
+   combine_efficiency     = 0.80e0    // chop box if sum of volumes of smaller
+                                      // boxes < efficiency * vol of large box
+}
+
+StandardTagAndInitialize {
+   tagging_method = "GRADIENT_DETECTOR"
+}
+
+LoadBalancer {
+   bin_pack_method     = "SPATIAL"
+   max_workload_factor = 1
+}
+
+TimerManager{
+   print_exclusive = FALSE
+   print_total = TRUE
+   print_threshold = 0.1
+   timer_list = "IBAMR::*::*" , "IBTK::*::*" , "*::*::*" 
+}

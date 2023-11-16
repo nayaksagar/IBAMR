@@ -1,0 +1,933 @@
+// Constants
+PI = 3.14159265
+MU = 0.01       // the viscosity required to attain the specified Reynolds number
+RHO = 1.0
+RHO_S = 1.01
+
+
+// grid spacing parameters
+MAX_LEVELS = 2                            // maximum number of levels in locally refined grid
+REF_RATIO  = 4                            // refinement ratio between levels
+Nx = 64                                    // actual    number of grid cells on coarsest grid level
+Ny = 96 
+Lx = 2.0                                  // width of computational domain
+Ly = 3.0
+NXFINEST = (REF_RATIO^(MAX_LEVELS - 1))*Nx  // Number of cells on the finest grid level
+NYFINEST = (REF_RATIO^(MAX_LEVELS - 1))*Ny
+Hx = Lx/NXFINEST
+Hy = Ly/NYFINEST
+
+
+// solver parameters
+DELTA_FUNCTION       = "IB_4"
+SOLVER_TYPE          = "STAGGERED"                // the fluid solver to use (STAGGERED or COLLOCATED)
+START_TIME           = 0.0e0                      // initial simulation time
+END_TIME             = 20.0                       // final simulation time
+MAX_INTEGRATOR_STEPS = 10000000000000             // Max no of steps.
+GROW_DT              = 2.0e0                      // growth factor for timesteps
+NUM_CYCLES           = 1                          // number of cycles of fixed-point iteration
+CONVECTIVE_OP_TYPE   = "PPM"                      // convective differencing discretization type
+CONVECTIVE_FORM      = "ADVECTIVE"                // how to compute the convective terms
+NORMALIZE_PRESSURE   = FALSE                      // whether to explicitly force the pressure to have mean zero
+CFL_MAX              = 0.3                        // maximum CFL number
+DT_MAX               = 0.001                     // maximum timestep size
+VORTICITY_TAGGING    = TRUE                       // whether to tag cells for refinement based on vorticity thresholds
+TAG_BUFFER           = 2                          // size of tag buffer used by grid generation algorithm
+REGRID_CFL_INTERVAL  = 0.3                        // regrid whenever any material point could have moved 0.5 meshwidths since previous regrid
+OUTPUT_U             = TRUE
+OUTPUT_P             = TRUE
+OUTPUT_F             = TRUE
+OUTPUT_OMEGA         = TRUE
+OUTPUT_DIV_U         = TRUE
+ENABLE_LOGGING       = TRUE
+
+// collocated solver parameters
+PROJECTION_METHOD_TYPE = "PRESSURE_UPDATE"
+SECOND_ORDER_PRESSURE_UPDATE = TRUE
+USE_EXACT_PROJECTION_METHOD = FALSE
+
+VelocityInitialConditions{
+   function_0 = "0.0"
+   funciton_1 = "0.0"
+}
+
+
+VelocityBcCoefs_0 {
+   acoef_function_0 = "1.0"
+   acoef_function_1 = "1.0"
+   acoef_function_2 = "1.0"
+   acoef_function_3 = "1.0"
+
+   bcoef_function_0 = "0.0"
+   bcoef_function_1 = "0.0"
+   bcoef_function_2 = "0.0"
+   bcoef_function_3 = "0.0"
+
+   gcoef_function_0 = "0.0"
+   gcoef_function_1 = "0.0"
+   gcoef_function_2 = "0.0"
+   gcoef_function_3 = "0.0"
+}
+
+VelocityBcCoefs_1 {
+   acoef_function_0 = "1.0"
+   acoef_function_1 = "1.0"
+   acoef_function_2 = "1.0"
+   acoef_function_3 = "1.0"
+
+   bcoef_function_0 = "0.0"
+   bcoef_function_1 = "0.0"
+   bcoef_function_2 = "0.0"
+   bcoef_function_3 = "0.0"
+
+   gcoef_function_0 = "0.0"
+   gcoef_function_1 = "0.0"
+   gcoef_function_2 = "0.0"
+   gcoef_function_3 = "0.0"
+}
+
+IBHierarchyIntegrator {
+   start_time           = START_TIME
+   end_time             = END_TIME
+   grow_dt              = GROW_DT
+   num_cycles           = NUM_CYCLES
+   regrid_cfl_interval  = REGRID_CFL_INTERVAL
+   dt_max               = DT_MAX
+   enable_logging       = ENABLE_LOGGING
+   max_integrator_steps = MAX_INTEGRATOR_STEPS
+   error_on_dt_change   = FALSE
+   warn_on_dt_change    = TRUE
+   time_stepping_method = "MIDPOINT_RULE"
+}
+
+ConstraintIBMethod {
+   delta_fcn                = DELTA_FUNCTION
+   enable_logging           = ENABLE_LOGGING
+   num_INS_cycles           = NUM_CYCLES
+   needs_divfree_projection = FALSE
+   rho_solid = RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO,RHO 
+
+   calculate_structure_linear_mom = TRUE
+   calculate_structure_rotational_mom = TRUE
+   
+   PrintOutput {
+   print_output          = TRUE               //default false
+   output_interval       = 100                  //default 1
+   output_drag           = TRUE               //default false
+   output_power          = FALSE              //default false
+   output_rig_transvel   = TRUE               //default false
+   output_rig_rotvel     = TRUE               //default false
+   output_com_coords     = TRUE               //default false
+   output_moment_inertia = TRUE               //default false
+   output_dirname        = "./Dump--Cylinder"    //default "./ConstraintIBMethodDump"
+   base_filename         = "SedimentingCylinder"      //default  "ImmersedStructure" 
+  }
+
+}
+
+// Particle radius
+particle_radius = 0.02
+
+// Repulsive force parameters
+EPSILON_P = 2.0
+GRAV_CONST = -980 * (RHO_S-RHO)
+XI = Hy
+
+
+
+//********************************** paste goestoinput.txt here ******************************************//
+num_structures = 51
+ConstraintIBKinematics { 
+
+    structure_names =  "particle_0",  "particle_1",  "particle_2",  "particle_3",  "particle_4",  "particle_5",  "particle_6",  "particle_7",  "particle_8",  "particle_9",  "particle_10",  "particle_11",  "particle_12",  "particle_13",  "particle_14",  "particle_15",  "particle_16",  "particle_17",  "particle_18",  "particle_19",  "particle_20",  "particle_21",  "particle_22",  "particle_23",  "particle_24",  "particle_25",  "particle_26",  "particle_27",  "particle_28",  "particle_29",  "particle_30",  "particle_31",  "particle_32",  "particle_33",  "particle_34",  "particle_35",  "particle_36",  "particle_37",  "particle_38",  "particle_39",  "particle_40",  "particle_41",  "particle_42",  "particle_43",  "particle_44",  "particle_45",  "particle_46",  "particle_47",  "particle_48",  "particle_49",  "porous" 
+	particle_0 {  
+		structure_names         	 = "particle_0" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_1 {  
+		structure_names         	 = "particle_1" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_2 {  
+		structure_names         	 = "particle_2" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_3 {  
+		structure_names         	 = "particle_3" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_4 {  
+		structure_names         	 = "particle_4" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_5 {  
+		structure_names         	 = "particle_5" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_6 {  
+		structure_names         	 = "particle_6" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_7 {  
+		structure_names         	 = "particle_7" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_8 {  
+		structure_names         	 = "particle_8" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_9 {  
+		structure_names         	 = "particle_9" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_10 {  
+		structure_names         	 = "particle_10" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_11 {  
+		structure_names         	 = "particle_11" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_12 {  
+		structure_names         	 = "particle_12" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_13 {  
+		structure_names         	 = "particle_13" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_14 {  
+		structure_names         	 = "particle_14" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_15 {  
+		structure_names         	 = "particle_15" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_16 {  
+		structure_names         	 = "particle_16" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_17 {  
+		structure_names         	 = "particle_17" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_18 {  
+		structure_names         	 = "particle_18" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_19 {  
+		structure_names         	 = "particle_19" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_20 {  
+		structure_names         	 = "particle_20" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_21 {  
+		structure_names         	 = "particle_21" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_22 {  
+		structure_names         	 = "particle_22" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_23 {  
+		structure_names         	 = "particle_23" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_24 {  
+		structure_names         	 = "particle_24" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_25 {  
+		structure_names         	 = "particle_25" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_26 {  
+		structure_names         	 = "particle_26" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_27 {  
+		structure_names         	 = "particle_27" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_28 {  
+		structure_names         	 = "particle_28" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_29 {  
+		structure_names         	 = "particle_29" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_30 {  
+		structure_names         	 = "particle_30" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_31 {  
+		structure_names         	 = "particle_31" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_32 {  
+		structure_names         	 = "particle_32" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_33 {  
+		structure_names         	 = "particle_33" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_34 {  
+		structure_names         	 = "particle_34" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_35 {  
+		structure_names         	 = "particle_35" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_36 {  
+		structure_names         	 = "particle_36" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_37 {  
+		structure_names         	 = "particle_37" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_38 {  
+		structure_names         	 = "particle_38" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_39 {  
+		structure_names         	 = "particle_39" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_40 {  
+		structure_names         	 = "particle_40" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_41 {  
+		structure_names         	 = "particle_41" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_42 {  
+		structure_names         	 = "particle_42" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_43 {  
+		structure_names         	 = "particle_43" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_44 {  
+		structure_names         	 = "particle_44" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_45 {  
+		structure_names         	 = "particle_45" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_46 {  
+		structure_names         	 = "particle_46" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_47 {  
+		structure_names         	 = "particle_47" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_48 {  
+		structure_names         	 = "particle_48" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	particle_49 {  
+		structure_names         	 = "particle_49" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 1,1,0 
+		calculate_rotational_momentum    = 0,0,1 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY"
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	} 
+
+	porous {  
+		structure_names         	 = "porous" 
+		structure_levels                 =  MAX_LEVELS - 1 
+		calculate_translational_momentum = 0,0,0 
+		calculate_rotational_momentum    = 0,0,0 
+		lag_position_update_method       = "CONSTRAINT_VELOCITY" 
+		tagged_pt_identifier             = MAX_LEVELS - 1, 0 
+	}
+
+}
+
+IBStandardInitializer { 
+
+ max_levels      = MAX_LEVELS 
+ structure_names =  "particle_0",  "particle_1",  "particle_2",  "particle_3",  "particle_4",  "particle_5",  "particle_6",  "particle_7",  "particle_8",  "particle_9",  "particle_10",  "particle_11",  "particle_12",  "particle_13",  "particle_14",  "particle_15",  "particle_16",  "particle_17",  "particle_18",  "particle_19",  "particle_20",  "particle_21",  "particle_22",  "particle_23",  "particle_24",  "particle_25",  "particle_26",  "particle_27",  "particle_28",  "particle_29",  "particle_30",  "particle_31",  "particle_32",  "particle_33",  "particle_34",  "particle_35",  "particle_36",  "particle_37",  "particle_38",  "particle_39",  "particle_40",  "particle_41",  "particle_42",  "particle_43",  "particle_44",  "particle_45",  "particle_46",  "particle_47",  "particle_48",  "particle_49",  "porous" 
+	particle_0 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_1 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_2 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_3 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_4 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_5 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_6 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_7 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_8 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_9 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_10 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_11 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_12 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_13 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_14 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_15 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_16 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_17 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_18 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_19 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_20 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_21 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_22 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_23 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_24 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_25 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_26 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_27 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_28 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_29 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_30 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_31 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_32 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_33 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_34 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_35 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_36 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_37 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_38 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_39 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_40 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_41 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_42 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_43 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_44 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_45 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_46 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_47 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_48 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	particle_49 {  
+		level_number         	 =  MAX_LEVELS - 1 
+	} 
+	porous {  
+		level_number            = MAX_LEVELS - 1 
+	}
+
+}
+
+//********************************************************************************************************//
+
+ForceProjector {
+
+ rho_fluid = RHO
+ gravitational_constant = 0.0,GRAV_CONST,0.0
+ 
+ eps_P      = EPSILON_P
+ eps_W      = 0.5*eps_P
+ xi         = XI
+ particle_radius = particle_radius
+ num_of_particles = num_structures   //-1 because last one is porous media
+
+}
+
+INSStaggeredHierarchyIntegrator {
+   mu                         = MU
+   rho                        = RHO
+   start_time                 = START_TIME
+   end_time                   = END_TIME
+   grow_dt                    = GROW_DT
+   convective_op_type         = CONVECTIVE_OP_TYPE
+   convective_difference_form = CONVECTIVE_FORM
+   normalize_pressure         = NORMALIZE_PRESSURE
+   cfl                        = CFL_MAX
+   dt_max                     = DT_MAX
+   using_vorticity_tagging    = VORTICITY_TAGGING
+   vorticity_rel_thresh       = 0.25
+   tag_buffer                 = TAG_BUFFER
+   output_U                   = OUTPUT_U
+   output_P                   = OUTPUT_P
+   output_F                   = OUTPUT_F
+   output_Omega               = OUTPUT_OMEGA
+   output_Div_U               = OUTPUT_DIV_U
+   enable_logging             = ENABLE_LOGGING
+
+   VelocityHypreSolver {
+      solver_type           = "Split"
+      split_solver_type     = "PFMG"
+      relative_residual_tol = 1.0e-12
+      max_iterations        = 1
+      enable_logging        = FALSE
+   }
+
+   VelocityFACSolver {
+      num_pre_sweeps  = 0
+      num_post_sweeps = 1
+      coarse_solver_choice = "hypre"
+      coarse_solver_tolerance = 1.0e-12
+      coarse_solver_max_iterations = 1
+      prolongation_method = "CONSTANT_REFINE"
+      restriction_method  = "CONSERVATIVE_COARSEN"
+      hypre_solver {
+         solver_type           = "Split"
+         split_solver_type     = "PFMG"
+         relative_residual_tol = 1.0e-12
+         max_iterations        = 1
+         enable_logging        = FALSE
+      }
+   }
+
+   PressureHypreSolver {
+      solver_type           = "PFMG"
+      rap_type              = 0
+      relax_type            = 2
+      skip_relax            = 1
+      num_pre_relax_steps   = 2
+      num_post_relax_steps  = 2
+      relative_residual_tol = 1.0e-2
+      max_iterations        = 100
+      enable_logging        = FALSE
+   }
+
+   PressureFACSolver {
+      num_pre_sweeps  = 0
+      num_post_sweeps = 3
+      coarse_solver_choice = "hypre"
+      coarse_solver_tolerance = 1.0e-12
+      coarse_solver_max_iterations = 1
+      prolongation_method = "LINEAR_REFINE"
+      restriction_method  = "CONSERVATIVE_COARSEN"
+      hypre_solver {
+         solver_type           = "PFMG"
+         rap_type              = 0
+         relax_type            = 2
+         skip_relax            = 1
+         num_pre_relax_steps   = 0
+         num_post_relax_steps  = 3
+         relative_residual_tol = 1.0e-12
+         max_iterations        = 1
+         enable_logging        = FALSE
+      }
+   }
+}
+
+Main {
+   solver_type = SOLVER_TYPE
+
+	// log file parameters
+	log_file_name               = "Cylinder.log"
+	log_all_nodes               = FALSE
+
+	// visualization dump parameters
+	viz_writer                  = "VisIt","Silo"
+	viz_dump_interval           = 100                   // zero to turn off
+	viz_dump_dirname            = "viz_FC"
+	visit_number_procs_per_file = 1
+
+	// restart dump parameters
+	restart_dump_interval       = 500                  // zero to turn off
+	restart_dump_dirname        = "restart_IB2d"
+
+	// hierarchy data dump parameters
+	data_dump_interval          = 0                     // zero to turn off
+	data_dump_dirname           = "hier_data_IB2d"
+
+	// timer dump parameters
+	timer_dump_interval         = 500                    // zero to turn off
+}
+
+CartesianGeometry {
+   domain_boxes = [ (0,0) , ( Nx, Ny) ]
+   x_lo         =   0.0,   0.0           // lower end of computational domain.
+   x_up         =   Lx,   Ly         // upper end of computational domain.
+   periodic_dimension = 0, 0
+}
+
+GriddingAlgorithm {
+   max_levels = MAX_LEVELS           // Maximum number of levels in hierarchy.
+   ratio_to_coarser {
+      level_1 = REF_RATIO,REF_RATIO  // vector ratio to next coarser level
+      level_2 = REF_RATIO,REF_RATIO
+      level_3 = REF_RATIO,REF_RATIO
+      level_4 = REF_RATIO,REF_RATIO
+      level_5 = REF_RATIO,REF_RATIO
+      level_6 = REF_RATIO,REF_RATIO
+      level_7 = REF_RATIO,REF_RATIO
+   }
+
+   largest_patch_size {
+      level_0 = 2048, 2048 // largest patch allowed in hierarchy
+                          // all finer levels will use same values as level_0...
+   }
+
+   smallest_patch_size {
+      level_0 =  8, 8 // smallest patch allowed in hierarchy
+                            // all finer levels will use same values as level_0...
+   }
+
+   allow_patches_smaller_than_minimum_size_to_prevent_overlaps = TRUE
+   efficiency_tolerance   = 0.80e0    // min % of tag cells in new patch level
+   combine_efficiency     = 0.80e0    // chop box if sum of volumes of smaller
+                                      // boxes < efficiency * vol of large box
+}
+
+StandardTagAndInitialize {
+   tagging_method = "GRADIENT_DETECTOR"
+}
+
+LoadBalancer {
+   bin_pack_method     = "SPATIAL"
+   max_workload_factor = 1
+}
+
+TimerManager{
+   print_exclusive = FALSE
+   print_total = TRUE
+   print_threshold = 0.1
+   timer_list = "IBAMR::*::*" , "IBTK::*::*" , "*::*::*" 
+}
