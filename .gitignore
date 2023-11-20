@@ -1,0 +1,11 @@
+*.txt
+*.dat
+Makefile
+Dump--Cylinder
+viz_FC
+restart_IB2d
+*.mpg
+*.mp4
+*.gif
+*.avi
+*.jpeg
