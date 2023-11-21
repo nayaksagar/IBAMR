@@ -62,17 +62,18 @@ ForceProjector::ForceProjector(const std::string& object_name,
                                Pointer<PatchHierarchy<NDIM> > patch_hierarchy,
                                Pointer<Database> input_db,
                                ConstraintIBMethod* constraint_ib_method,
+                               std::vector<std::vector<int>> particle_lag_relation_vec,
                                const std::string solver_type)
     : d_object_name(object_name),
       d_lag_data_manager(lag_data_manager),
       d_patch_hierarchy(patch_hierarchy),
       d_constraint_ib_method(constraint_ib_method),
+      d_particle_lag_relation(particle_lag_relation_vec),
       d_solver_type(solver_type),
       d_grav_const(NDIM)
 {
     // put some default values.
     d_rho_fluid = 1.0;
-
     // Initialize  variables & variable contexts associated with Eulerian forces.
     VariableDatabase<NDIM>* var_db = VariableDatabase<NDIM>::getDatabase();
     d_body_force_context = var_db->getContext(d_object_name + "::BODYFORCE");
