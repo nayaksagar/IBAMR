@@ -148,6 +148,7 @@ ForceProjector::associateVolumeElement(const double vol_lag_pt)
 void
 ForceProjector::calculateLagrangianBodyForce(const double /*new_time*/, const double current_time)
 {
+    
     const int coarsest_ln = 0;
     const int finest_ln = d_patch_hierarchy->getFinestLevelNumber();
     d_lag_force.clear();
@@ -170,16 +171,49 @@ ForceProjector::calculateLagrangianBodyForce(const double /*new_time*/, const do
     x_coord[finest_ln] = d_lag_data_manager->getLData("X", finest_ln);
 
     // Set Lagrangian gravitational force.
-    for (int ln = coarsest_ln; ln <= finest_ln; ++ln)
-    {
-        if (!d_lag_data_manager->levelContainsLagrangianData(ln)) continue;
+    // for (int ln = coarsest_ln; ln <= finest_ln; ++ln)
+    // {
+        // if (!d_lag_data_manager->levelContainsLagrangianData(ln)) continue;
 
         // Get ponter to LData corresponding to lagrangian force.
-        boost::multi_array_ref<double, 2>& X_data = *x_coord[ln]->getLocalFormVecArray();
-        boost::multi_array_ref<double, 2>& F_data = *d_lag_force[ln]->getLocalFormVecArray();
-        const Pointer<LMesh> mesh = d_lag_data_manager->getLMesh(ln);
+        boost::multi_array_ref<double, 2>& X_data = *x_coord[finest_ln]->getLocalFormVecArray();
+        boost::multi_array_ref<double, 2>& F_data = *d_lag_force[finest_ln]->getLocalFormVecArray();
+        const Pointer<LMesh> mesh = d_lag_data_manager->getLMesh(finest_ln);
         const std::vector<LNode*>& local_nodes = mesh->getLocalNodes();
 
+        for(int particle_idx = 0; particle_idx < d_particle_lag_relation.size(); ++particle_idx)
+        {
+            IBTK::Vector3d particle_COM, neighbour_COM;
+            if(particle_idx==0){
+                particle_COM = cylinder0_COM;
+                neighbour_COM = cylinder1_COM;
+            }
+            else if(particle_idx == 1){
+                particle_COM = cylinder1_COM;
+                neighbour_COM = cylinder0_COM;
+            }
+
+            for(int lag_idx = 0; lag_idx < d_particle_lag_relation[particle_idx].size(); ++lag_idx)
+            {
+                const int local_idx = d_particle_lag_relation[particle_idx][lag_idx];
+                const double* const X = &X_data[local_idx][0];
+                double* const F = &F_data[local_idx][0];
+                
+                for (int d = 0; d < NDIM; ++d) F[d] = d_rho_fluid * d_grav_const[d] * d_vol_lag_pt;
+
+                IBTK::Vector3d Fpp;
+                IBTK::Vector3d Fpw;
+
+                if(d_constraint_ib_method->getLagrangianStructureIsActivated(0,finest_ln) && d_constraint_ib_method->getLagrangianStructureIsActivated(1,finest_ln))
+                {
+                    Fpp = computeParticleParticleForce(particle_COM, neighbour_COM);
+                    for (int d = 0; d < NDIM; ++d) F[d] += Fpp[d] * d_vol_lag_pt;
+                }
+            }
+        }
+        // std::cin.get();
+        
+        /*
         for (std::vector<LNode*>::const_iterator cit = local_nodes.begin(); cit != local_nodes.end(); ++cit)
         {
             const LNode* const node_idx = *cit;
@@ -265,10 +299,11 @@ ForceProjector::calculateLagrangianBodyForce(const double /*new_time*/, const do
                 // }
             }
             
-        }
-        x_coord[ln]->restoreArrays();
-        d_lag_force[ln]->restoreArrays();
-    } // all levels
+        }*/
+        
+        x_coord[finest_ln]->restoreArrays();
+        d_lag_force[finest_ln]->restoreArrays();
+    // } // all levels
 
     return;
 

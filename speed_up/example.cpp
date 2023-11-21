@@ -224,7 +224,6 @@ main(int argc, char* argv[])
         std::vector<std::vector<int>> particle_lag_relation_vec;
 
         const int finest_level = input_db->getIntegerWithDefault("MAX_LEVELS",1) - 1;  // patch_hierarchy->getFinestLevelNumber() gives -1 why?
-        std::cout << finest_level << std::endl;
         std::vector<Pointer<LData> > x_coord(finest_level + 1, Pointer<LData>(NULL));
         x_coord[finest_level] = ib_method_ops->getLDataManager()->getLData("X", finest_level);
 
@@ -241,7 +240,7 @@ main(int argc, char* argv[])
         boost::multi_array_ref<double, 2>& X_data = *x_coord[finest_level]->getLocalFormVecArray();
         const Pointer<LMesh> mesh = ib_method_ops->getLDataManager()->getLMesh(finest_level);
         const std::vector<LNode*>& local_nodes = mesh->getLocalNodes();
-        int temp=0;
+        
         for(int particle_idx = 0; particle_idx < xcom.size(); ++particle_idx){
             std::vector<int> lagPoints;
 
@@ -253,7 +252,6 @@ main(int argc, char* argv[])
 
                 if (std::pow(X[0] - xcom[particle_idx], 2.0) + std::pow(X[1] - ycom[particle_idx], 2.0) <= (std::pow(particle_rad, 2.0) + 0.00001)){
                     lagPoints.push_back(local_idx);
-                    // std::cout << 0 << "\t" << local_idx << "\t" << X[0] << "\t" << X[1] << std::endl;
                 }
             }       
             particle_lag_relation_vec.push_back(lagPoints);
