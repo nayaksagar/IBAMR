@@ -41,7 +41,7 @@
 #include <PatchHierarchy.h>
 #include <SideVariable.h>
 #include <VariableContext.h>
-#include <ibamr/ConstraintIBMethod.h>
+#include <ConstraintIBMethod.h>
 #include <ibtk/LData.h>
 #include <ibtk/LDataManager.h>
 #include <tbox/Database.h>
@@ -162,7 +162,7 @@ private:
     /*!
     * Vector that stores which lagrangian particle is in which particle
     */
-   std::vector<std::vector<int>> d_particle_lag_relation;
+    std::vector<std::vector<int>> d_particle_lag_relation;
 
     /*!
      * Fluid solver type.
@@ -172,7 +172,7 @@ private:
     /*!
      * Pointer to Lagrangian force data.
      */
-    std::vector<SAMRAI::tbox::Pointer<IBTK::LData> > d_lag_force, d_lag_pp_repulsion_force;
+    std::vector<SAMRAI::tbox::Pointer<IBTK::LData> > d_lag_force;
 
     /*!
      *  Variables and variable context associated with calculating Eulerian force.
@@ -205,9 +205,16 @@ private:
      * Potential parameters
      */
     double d_xi, d_radius_0, d_radius_1;
-    double d_eps_P, d_cij;
+    double d_eps_P, d_eps_W, d_cij;
+
+    /*my parameters*/
+    int num_of_particles;
+    double particle_rad;
 
     IBTK::Vector3d computeParticleParticleForce(IBTK::Vector3d X0, IBTK::Vector3d X1);
+
+    IBTK::Vector3d computeParticleGrainForce(IBTK::Vector3d particle_COM, IBTK::Vector3d grain_COM, double grain_rad);
+
     IBTK::Vector3d computeParticleWallForce(IBTK::Vector3d particle_COM, double wall_pos, int wall);
 
 }; // ForceProjector

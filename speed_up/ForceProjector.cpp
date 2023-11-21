@@ -52,7 +52,6 @@ callForceProjectorCallBackFunction(const double current_time, const double new_t
         ptr_forceprojector->calculateLagrangianBodyForce(new_time, current_time);
         ptr_forceprojector->calculateEulerianBodyForce(new_time, current_time);
     }
-
     return;
 
 } // callForceProjectorCallBackFunction
@@ -74,6 +73,7 @@ ForceProjector::ForceProjector(const std::string& object_name,
 {
     // put some default values.
     d_rho_fluid = 1.0;
+
     // Initialize  variables & variable contexts associated with Eulerian forces.
     VariableDatabase<NDIM>* var_db = VariableDatabase<NDIM>::getDatabase();
     d_body_force_context = var_db->getContext(d_object_name + "::BODYFORCE");
@@ -105,10 +105,10 @@ ForceProjector::getFromInput(Pointer<Database> input_db)
 
     // Potential model
     d_eps_P = input_db->getDouble("eps_P");
-    d_cij = input_db->getDouble("cij");
+    d_eps_W = input_db->getDouble("eps_W");
     d_xi = input_db->getDouble("xi");
-    d_radius_0 = input_db->getDouble("radius_0");
-    d_radius_1 = input_db->getDouble("radius_1");
+    num_of_particles = input_db->getInteger("num_of_particles"); 
+    particle_rad = input_db->getDouble("particle_radius"); //bug 
 
     return;
 
@@ -146,9 +146,23 @@ ForceProjector::associateVolumeElement(const double vol_lag_pt)
 } // associateVolumeElement
 
 void
-ForceProjector::calculateLagrangianBodyForce(const double /*new_time*/, const double current_time)
-{
-    
+ForceProjector::calculateLagrangianBodyForce(const double /*new_time*/, const double /*current_time*/)
+{   
+    //read grain_info data
+    int num_grains;
+    std::ifstream graindata;
+    graindata.open("grain_info.txt");
+    graindata >> num_grains;
+    double grain_com_x[num_grains];
+    double grain_com_y[num_grains];
+    double grain_rad[num_grains];
+    for(int i=0; i<num_grains; i++){
+       graindata >> grain_com_x[i];
+       graindata >> grain_com_y[i];
+       graindata >> grain_rad[i];
+    }
+    graindata.close();
+
     const int coarsest_ln = 0;
     const int finest_ln = d_patch_hierarchy->getFinestLevelNumber();
     d_lag_force.clear();
@@ -162,148 +176,97 @@ ForceProjector::calculateLagrangianBodyForce(const double /*new_time*/, const do
 
     // Get the centers of mass of the structures
     std::vector<std::vector<double> > structure_COM = d_constraint_ib_method->getCurrentStructureCOM();
-    IBTK::Vector3d cylinder0_COM, cylinder1_COM;
-    for (int d = 0; d < 3; ++d) cylinder0_COM[d] = structure_COM[0][d]; // Top
-    for (int d = 0; d < 3; ++d) cylinder1_COM[d] = structure_COM[1][d]; // Bottom 
 
-    // Positions of each particle
-    std::vector<Pointer<LData> > x_coord(finest_ln + 1, Pointer<LData>(NULL));
-    x_coord[finest_ln] = d_lag_data_manager->getLData("X", finest_ln);
 
-    // Set Lagrangian gravitational force.
-    // for (int ln = coarsest_ln; ln <= finest_ln; ++ln)
-    // {
-        // if (!d_lag_data_manager->levelContainsLagrangianData(ln)) continue;
-
-        // Get ponter to LData corresponding to lagrangian force.
-        boost::multi_array_ref<double, 2>& X_data = *x_coord[finest_ln]->getLocalFormVecArray();
-        boost::multi_array_ref<double, 2>& F_data = *d_lag_force[finest_ln]->getLocalFormVecArray();
-        const Pointer<LMesh> mesh = d_lag_data_manager->getLMesh(finest_ln);
-        const std::vector<LNode*>& local_nodes = mesh->getLocalNodes();
-
-        for(int particle_idx = 0; particle_idx < d_particle_lag_relation.size(); ++particle_idx)
-        {
-            IBTK::Vector3d particle_COM, neighbour_COM;
-            if(particle_idx==0){
-                particle_COM = cylinder0_COM;
-                neighbour_COM = cylinder1_COM;
-            }
-            else if(particle_idx == 1){
-                particle_COM = cylinder1_COM;
-                neighbour_COM = cylinder0_COM;
-            }
-
-            for(int lag_idx = 0; lag_idx < d_particle_lag_relation[particle_idx].size(); ++lag_idx)
-            {
-                const int local_idx = d_particle_lag_relation[particle_idx][lag_idx];
-                const double* const X = &X_data[local_idx][0];
-                double* const F = &F_data[local_idx][0];
-                
-                for (int d = 0; d < NDIM; ++d) F[d] = d_rho_fluid * d_grav_const[d] * d_vol_lag_pt;
-
-                IBTK::Vector3d Fpp;
-                IBTK::Vector3d Fpw;
-
-                if(d_constraint_ib_method->getLagrangianStructureIsActivated(0,finest_ln) && d_constraint_ib_method->getLagrangianStructureIsActivated(1,finest_ln))
-                {
-                    Fpp = computeParticleParticleForce(particle_COM, neighbour_COM);
-                    for (int d = 0; d < NDIM; ++d) F[d] += Fpp[d] * d_vol_lag_pt;
-                }
-            }
-        }
-        // std::cin.get();
-        
-        /*
-        for (std::vector<LNode*>::const_iterator cit = local_nodes.begin(); cit != local_nodes.end(); ++cit)
-        {
-            const LNode* const node_idx = *cit;
-            const int local_idx = node_idx->getLocalPETScIndex();
-            const double* const X = &X_data[local_idx][0];
+    // Get pointer to LData corresponding to lagrangian force.
+    boost::multi_array_ref<double, 2>& F_data = *d_lag_force[finest_ln]->getLocalFormVecArray();
+    
+    for(int particle_index = 0; particle_index < num_of_particles; particle_index++){
+        for(int lag_idx = 0; lag_idx < d_particle_lag_relation[particle_index].size(); ++lag_idx){
+            const int local_idx = d_particle_lag_relation[particle_index][lag_idx];
             double* const F = &F_data[local_idx][0];
+            
+            IBTK::Vector3d particle_COM;
+            
+            if(!d_constraint_ib_method->getLagrangianStructureIsActivated(particle_index,finest_ln))
+                continue;
 
-           
+            for (int d = 0; d < 3; ++d) particle_COM[d] = structure_COM[particle_index][d];
+            
+            //check whether lagrangian point lies within the particle
+            // bool within_particle = false;
+            // if(std::pow(X[0] - particle_COM[0], 2.0) + std::pow(X[1] - particle_COM[1], 2.0) <= 
+            //         std::pow(particle_rad + d_xi/4.0, 2.0)){
+            //     within_particle = true;
+            // }
+            
+            IBTK::Vector3d Fpg, Fpp, Fpw;
+
+            // if(within_particle){
+                
             for (int d = 0; d < NDIM; ++d) F[d] = d_rho_fluid * d_grav_const[d] * d_vol_lag_pt;
 
-            bool within_cyl0 = false;
-            if (std::pow(X[0] - cylinder0_COM[0], 2.0) + std::pow(X[1] - cylinder0_COM[1], 2.0) <=
-                std::pow(d_radius_0 + d_xi / 4.0, 2.0))
-            {
-                within_cyl0 = true;
-            }
-
-            bool within_cyl1 = false;
-            if (std::pow(X[0] - cylinder1_COM[0], 2.0) + std::pow(X[1] - cylinder1_COM[1], 2.0) <=
-                std::pow(d_radius_1 + d_xi / 4.0, 2.0))
-            {
-                within_cyl1 = true;
-            }
-
-            IBTK::Vector3d Fpp;
-            IBTK::Vector3d Fpw;
-
-            if(d_constraint_ib_method->getLagrangianStructureIsActivated(0,1) && d_constraint_ib_method->getLagrangianStructureIsActivated(1,1)){
-                if (within_cyl0)
-                {
-                    Fpp = computeParticleParticleForce(cylinder0_COM, cylinder1_COM);
-                    for (int d = 0; d < NDIM; ++d) F[d] += Fpp[d] * d_vol_lag_pt;
-                }
-                else if (within_cyl1)
-                {
-                    Fpp = computeParticleParticleForce(cylinder1_COM, cylinder0_COM);
-                    for (int d = 0; d < NDIM; ++d) F[d] += Fpp[d] * d_vol_lag_pt;
+            //if it lies within the particle calculate force acting on it due to neighboring grains
+            if(num_grains > 0){
+                for(int grain_index=0; grain_index<num_grains; grain_index++){
+                    IBTK::Vector3d grain_COM;
+                    grain_COM[0] = grain_com_x[grain_index];
+                    grain_COM[1] = grain_com_y[grain_index];
+                    Fpg  = computeParticleGrainForce(particle_COM, grain_COM, grain_rad[grain_index]);
+                    for (int d = 0; d < NDIM; ++d) F[d] += Fpg[d] * d_vol_lag_pt;
                 }
             }
-            //else
-            //{
-           //     TBOX_ERROR("No repulsion force added");
-           // }
-            
-            // if(within_cyl0 || within_cyl1)
-            //   for (int d = 0; d < NDIM; ++d) F[d] += Fpp[d] * d_vol_lag_pt;
 
+            //if it lies within the particle calculate force acting on it due to neighboring particles
+            if(num_of_particles > 1){
+                for(int neigh_part_index = 0; neigh_part_index < num_of_particles; neigh_part_index++){
+                    if (neigh_part_index == particle_index || !d_constraint_ib_method->getLagrangianStructureIsActivated(neigh_part_index,finest_ln))
+                        continue;
+                    else{
+                        IBTK::Vector3d neigh_part_COM;
+                        neigh_part_COM[0] = structure_COM[neigh_part_index][0];
+                        neigh_part_COM[1] = structure_COM[neigh_part_index][1];
+                        Fpp  = computeParticleParticleForce(particle_COM, neigh_part_COM); //bug: all particles are assumed to be of same radius
+                        for (int d = 0; d < NDIM; ++d) F[d] += Fpp[d] * d_vol_lag_pt;
+                    }
+                }
+            }
+        
             //check if particle is near any wall, if yes, which wall (left, right or bottom)
-            double left = 0.0, right = 2.0, bottom = 0.0, wall_pos; //bug:top wall is not modelled
+            double left = 0.0, right = 3.0, bottom = 0.0, top = 2.0, wall_pos;
             int wall;
             bool near_wall = false;
-            IBTK::Vector3d strctCOM;
-            double strctRAD;
-            if (within_cyl0){   
-                strctCOM = cylinder0_COM;
-                strctRAD = d_radius_0;
+            if(2.0*fabs(left - particle_COM[0]) < particle_rad + d_xi){
+                wall_pos = left;
+                wall = 0;
+                near_wall = true;
             }
-            else if (within_cyl1){   
-                strctCOM = cylinder1_COM;
-                strctRAD = d_radius_1;
+            else if(2.0*fabs(right - particle_COM[0]) < particle_rad + d_xi){
+                wall_pos = right;
+                wall = 0;
+                near_wall = true;
+            }
+            else if(2.0*fabs(bottom - particle_COM[1]) < particle_rad + d_xi){
+                wall_pos = bottom;
+                wall = 1;
+                near_wall = true;
+            }
+            else if(2.0*fabs(top - particle_COM[1]) < particle_rad + d_xi){
+                wall_pos = top;
+                wall = 1;
+                near_wall = true;
             }
 
-            if(within_cyl0 || within_cyl1){
-                if(fabs(left - strctCOM[0]) < strctRAD + d_xi){
-                    wall_pos = left;
-                    wall = 0;
-                    near_wall = true;
-                }
-                else if(fabs(right - strctCOM[0]) < strctRAD + d_xi){
-                    wall_pos = right;
-                    wall = 0;
-                    near_wall = true;
-                }
-                else if(fabs(bottom - strctCOM[1]) < strctRAD + d_xi){
-                    wall_pos = bottom;
-                    wall = 1;
-                    near_wall = true;
-                }
-
-                // if(near_wall){
-                //     Fpw = computeParticleWallForce(strctCOM, wall_pos, wall);
-                //     for (int d = 0; d < NDIM; ++d) F[d] += Fpw[d] * d_vol_lag_pt;
-                // }
+            if(near_wall){
+                Fpw = computeParticleWallForce(particle_COM, wall_pos, wall);
+                for (int d = 0; d < NDIM; ++d) F[d] += Fpw[d] * d_vol_lag_pt;
             }
-            
-        }*/
+
+            // }
+        }
         
-        x_coord[finest_ln]->restoreArrays();
-        d_lag_force[finest_ln]->restoreArrays();
-    // } // all levels
+    }
+    d_lag_force[finest_ln]->restoreArrays();
 
     return;
 
@@ -361,98 +324,95 @@ ForceProjector::calculateEulerianBodyForce(const double /*new_time*/, const doub
 } // calculateEulerianBodyForce
 
 IBTK::Vector3d
-ForceProjector::computeParticleParticleForce(IBTK::Vector3d X0, IBTK::Vector3d X1)
+ForceProjector::computeParticleParticleForce(IBTK::Vector3d particle_COM, IBTK::Vector3d neigh_part_COM)
 {
     IBTK::Vector3d Fpp;
-    const double R0 = d_radius_0;
-    const double R1 = d_radius_1;
-    
-    // Glowinski model
-    // IBTK::Vector3d X_diff = X0 - X1;
-    // const double dij = std::sqrt(X_diff.dot(X_diff));
-    // if (dij > R0 + R1 + d_xi)
-    // {
-    //     Fpp.setZero();
-    // }
-    // else if (dij <= R0 + R1 + d_xi)
-    // {
-    //     Fpp = d_cij / d_eps_P * pow((dij - R0 - R1 - d_xi) / d_xi, 2.0) * (X0 - X1) / dij;
-    // }
 
-    // Wan & Turek's model
-    IBTK::Vector3d X_diff = X0 - X1;
-    const double dij = std::sqrt(X_diff.dot(X_diff));
-    if (dij > R0 + R1 + d_xi)
+    IBTK::Vector3d COM_diff = particle_COM - neigh_part_COM;
+    const double dij = std::sqrt(COM_diff.dot(COM_diff));
+    if (dij > particle_rad + particle_rad + d_xi)  //bug: particle_rad and neigh_part_rad are same
     {
         Fpp.setZero();
     }
-    else if (dij <= R0 + R1 + d_xi && dij >= R0+R1)
+    else if (dij <= particle_rad + particle_rad + d_xi)
     {
-        Fpp = 1.0 / (d_eps_P * d_eps_P) * (X0 - X1) * pow((R0 + R1 + d_xi - dij),2);
-    }
-    else if (dij <= R0 + R1)
-    {
-        Fpp = 1.0 / d_eps_P * (X0 - X1) * (R0 + R1 - dij);
+        d_cij = d_rho_fluid*3.14159265*particle_rad*particle_rad*980;
+        Fpp = d_cij / d_eps_P * pow((dij - particle_rad - particle_rad - d_xi) / d_xi, 2.0) * (COM_diff) / dij;
     }
 
     return Fpp;
 }
 
 IBTK::Vector3d
+ForceProjector::computeParticleGrainForce(IBTK::Vector3d particle_COM, IBTK::Vector3d grain_COM, double grain_rad)
+{
+    IBTK::Vector3d Fpg;
+    
+    IBTK::Vector3d COM_diff = particle_COM - grain_COM;
+    const double dij = std::sqrt(COM_diff.dot(COM_diff));
+    if (dij > particle_rad + grain_rad + d_xi)
+    {
+        Fpg.setZero();
+    }
+    else if (dij <= particle_rad + grain_rad + d_xi)
+    {
+        d_cij = d_rho_fluid*3.14159265*particle_rad*grain_rad*980;
+        Fpg = d_cij / d_eps_P * pow((dij - particle_rad - grain_rad- d_xi) / d_xi, 2.0) * (COM_diff) / dij;
+    }
+
+    return Fpg;
+}
+
+IBTK::Vector3d
 ForceProjector::computeParticleWallForce(IBTK::Vector3d particle_COM, double wall_pos, int wall){
     IBTK::Vector3d Fpw;
     
-    // double COM_diff = 2.0*(particle_COM[wall] - wall_pos);
-    // double dij = std::sqrt(COM_diff*COM_diff);
-    // if (dij > 2.0*d_radius_0 + d_xi)  //bug:both particles are assumed to be of same radius
-    // {
-    //     Fpw.setZero();
-    // }
-    // else if (dij <= 2.0*d_radius_0 + d_xi)
-    // {
-    //     for(int d=0;d<3;d++){
-    //       if(d==wall){
-    //         d_cij = d_rho_fluid*3.14159265*d_radius_0*980.0;
-    //         Fpw[d] = d_cij / (0.5*d_eps_P) * pow((dij - 2.0*d_radius_0 - d_xi) / d_xi, 2.0) * COM_diff/dij;
-    //       }
-    //       else{
-    //         Fpw[d] = 0.0;
-    //       }
-    //     }
-    // }
-
-
-    // Wan & Turek's model bug:both particles are considered to be of same radius
+    //Glowinski
     double COM_diff = 2.0*(particle_COM[wall] - wall_pos);
-    double dij = std::sqrt(COM_diff*COM_diff);
-    if (dij > 2.0*d_radius_0 + d_xi)
+    double di = std::sqrt(COM_diff*COM_diff);
+    Fpw.setZero(); 
+    if (di > 2.0*particle_rad + d_xi)
     {
         Fpw.setZero();
     }
-    else if (dij <= 2.0*d_radius_0 + d_xi && dij >= 2.0*d_radius_0)
+    else if (di <= 2.0*particle_rad + d_xi)
     {
-        for (int d = 0; d < 3; d++){
-            if(d==wall){
-                Fpw[d] = 1.0 / (0.5 * d_eps_P * d_eps_P) * (COM_diff) * pow((2.0*d_radius_0 + d_xi - dij),2);
-            }
-            else{
-                Fpw[d] = 0.0;
-            }
-        }
-    }
-    else if (dij <= 2.0*d_radius_0)
-    {
-        for (int d = 0; d < 3; d++){
-            if(d==wall){
-                Fpw[d] = 1.0 / (0.5*d_eps_P) * (COM_diff) * (2.0*d_radius_0 - dij);
-            }
-            else{
-                Fpw[d] = 0.0;
-            }
-        }
+            d_cij = d_rho_fluid*3.14159265*particle_rad*980;
+            Fpw[wall] = d_cij / d_eps_W * pow((di - 2.0*particle_rad - d_xi) / d_xi, 2.0) * COM_diff/di;
     }
 
     return Fpw;
-}
+    
+    /*// Wan & Turek's model bug: particles are considered to be of same radius
+    double COM_diff = 2.0*(particle_COM[wall] - wall_pos);
+    double dij = std::sqrt(COM_diff*COM_diff);
+    if (dij > 2.0*particle_rad + d_xi)
+    {
+        Fpw.setZero();
+    }
+    else if (dij <= 2.0*particle_rad + d_xi && dij >= 2.0*particle_rad)
+    {
+        for (int d = 0; d < 3; d++){
+            if(d==wall){
+                Fpw[d] = 1.0 / (0.5 * d_eps_P * d_eps_P) * (COM_diff) * pow((2.0*particle_rad + d_xi - dij),2);
+            }
+            else{
+                Fpw[d] = 0.0;
+            }
+        }
+    }
+    else if (dij <= 2.0*particle_rad)
+    {
+        for (int d = 0; d < 3; d++){
+            if(d==wall){
+                Fpw[d] = 1.0 / (0.5*d_eps_P) * (COM_diff) * (2.0*particle_rad - dij);
+            }
+            else{
+                Fpw[d] = 0.0;
+            }
+        }
+    }
 
+    return Fpw;*/
+}
 } // namespace IBTK

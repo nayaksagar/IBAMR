@@ -1,4 +1,4 @@
-// Filename: RigidBodyKinematics.h
+ // Filename: RigidBodyKinematics.h
 //
 // Copyright (c) 2002-2014, Amneet Bhalla and Boyce Griffith
 // All rights reserved.
@@ -62,7 +62,7 @@ RigidBodyKinematics::RigidBodyKinematics(const std::string& object_name,
       d_tagged_pt_position(3, 0.0)
 {
     // NOTE: Parent class constructor registers class with the restart manager, sets object name.
-
+    
     // Read-in kinematics velocity functions
     for (int d = 0; d < NDIM; ++d)
     {
