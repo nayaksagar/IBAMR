@@ -199,31 +199,13 @@ main(int argc, char* argv[])
                     bc_coefs_name, app_initializer->getComponentDatabase(bc_coefs_db_name), grid_geometry);
             }
             navier_stokes_integrator->registerPhysicalBoundaryConditions(u_bc_coefs);
-        }
+        }  
 
-        // Create Eulerian body force function specification objects.
-        if (input_db->keyExists("ForcingFunction"))
-        {
-            Pointer<CartGridFunction> f_fcn = new muParserCartGridFunction(
-                "f_fcn", app_initializer->getComponentDatabase("ForcingFunction"), grid_geometry);
-            time_integrator->registerBodyForceFunction(f_fcn);
-        }
 
-        // initialize gravitational force projector object.
-        ForceProjector* ptr_gravityforce =
-            new IBTK::ForceProjector("GravityForceProjector",
-                                     ib_method_ops->getLDataManager(),
-                                     patch_hierarchy,
-                                     app_initializer->getComponentDatabase("ForceProjector"),
-                                     ib_method_ops,
-                                     "STAGGERED");
-        ib_method_ops->registerPreProcessSolveFluidEquationsCallBackFunction(&callForceProjectorCallBackFunction,
-                                                                             static_cast<void*>(ptr_gravityforce));
 
-        // initialize Eulerian body force object.
-        Pointer<CartGridFunction> ptr_cartgravityforce =
-            new IBTK::CartGridBodyForce(ptr_gravityforce->getEulerianForcePatchDataIndex());
-        time_integrator->registerBodyForceFunction(ptr_cartgravityforce);
+
+
+
 
         // Set up visualization plot file writers.
         Pointer<VisItDataWriter<NDIM> > visit_data_writer = app_initializer->getVisItDataWriter();
@@ -234,9 +216,75 @@ main(int argc, char* argv[])
             ib_method_ops->registerLSiloDataWriter(silo_data_writer);
             time_integrator->registerVisItDataWriter(visit_data_writer);
         }
-
+        
         // Initialize hierarchy configuration and data on all patches.
         time_integrator->initializePatchHierarchy(patch_hierarchy, gridding_algorithm);
+        
+        /************************* force projector speed up *******************************/
+        std::vector<std::vector<int>> particle_lag_relation_vec;
+
+        const int finest_level = input_db->getIntegerWithDefault("MAX_LEVELS",1) - 1;  // patch_hierarchy->getFinestLevelNumber() gives -1 why?
+        std::cout << finest_level << std::endl;
+        std::vector<Pointer<LData> > x_coord(finest_level + 1, Pointer<LData>(NULL));
+        x_coord[finest_level] = ib_method_ops->getLDataManager()->getLData("X", finest_level);
+
+        std::vector<double> xcom;
+        std::vector<double> ycom;
+        const double particle_rad = input_db -> getDouble("R0");
+        
+        //populate these later using comFile
+        xcom.push_back(1.0);
+        xcom.push_back(1.0);
+        ycom.push_back(1.2);
+        ycom.push_back(0.8);
+
+        boost::multi_array_ref<double, 2>& X_data = *x_coord[finest_level]->getLocalFormVecArray();
+        const Pointer<LMesh> mesh = ib_method_ops->getLDataManager()->getLMesh(finest_level);
+        const std::vector<LNode*>& local_nodes = mesh->getLocalNodes();
+        int temp=0;
+        for(int particle_idx = 0; particle_idx < xcom.size(); ++particle_idx){
+            std::vector<int> lagPoints;
+
+            for (std::vector<LNode*>::const_iterator cit = local_nodes.begin(); cit != local_nodes.end(); ++cit)
+            {
+                const LNode* const node_idx = *cit;
+                const int local_idx = node_idx->getLocalPETScIndex();
+                const double* const X = &X_data[local_idx][0];
+
+                if (std::pow(X[0] - xcom[particle_idx], 2.0) + std::pow(X[1] - ycom[particle_idx], 2.0) <= (std::pow(particle_rad, 2.0) + 0.00001)){
+                    lagPoints.push_back(local_idx);
+                    // std::cout << 0 << "\t" << local_idx << "\t" << X[0] << "\t" << X[1] << std::endl;
+                }
+            }       
+            particle_lag_relation_vec.push_back(lagPoints);
+        }
+        /************************* force projector speed up *******************************/ 
+
+        // Create Eulerian body force function specification objects.
+        if (input_db->keyExists("ForcingFunction"))
+        {
+            Pointer<CartGridFunction> f_fcn = new muParserCartGridFunction(
+                "f_fcn", app_initializer->getComponentDatabase("ForcingFunction"), grid_geometry);
+            time_integrator->registerBodyForceFunction(f_fcn);
+        }
+        
+        // initialize gravitational force projector object.
+        ForceProjector* ptr_gravityforce =
+            new IBTK::ForceProjector("GravityForceProjector",
+                                     ib_method_ops->getLDataManager(),
+                                     patch_hierarchy,
+                                     app_initializer->getComponentDatabase("ForceProjector"),
+                                     ib_method_ops,
+                                     particle_lag_relation_vec,
+                                     "STAGGERED");
+        ib_method_ops->registerPreProcessSolveFluidEquationsCallBackFunction(&callForceProjectorCallBackFunction,
+                                                                             static_cast<void*>(ptr_gravityforce));                                                                    
+
+        // initialize Eulerian body force object.
+        Pointer<CartGridFunction> ptr_cartgravityforce =
+            new IBTK::CartGridBodyForce(ptr_gravityforce->getEulerianForcePatchDataIndex());
+        time_integrator->registerBodyForceFunction(ptr_cartgravityforce);
+
 
         // Create ConstraintIBKinematics objects
         vector<Pointer<ConstraintIBKinematics> > ibkinematics_ops_vec;
@@ -252,7 +300,7 @@ main(int argc, char* argv[])
                 patch_hierarchy);
             ibkinematics_ops_vec.push_back(ib_kinematics_op);
         }
-
+        
         // register ConstraintIBKinematics objects with ConstraintIBMethod.
         ib_method_ops->registerConstraintIBKinematics(ibkinematics_ops_vec);
         ib_method_ops->initializeHierarchyOperatorsandData();
@@ -299,18 +347,12 @@ main(int argc, char* argv[])
             /************************************************************************************************************************/
             // I think I should make changes here
             const int finest_ln = patch_hierarchy->getFinestLevelNumber();
-
-            std::vector<Pointer<LData> > x_coord(finest_ln + 1, Pointer<LData>(NULL));
-            x_coord[finest_ln] = ib_method_ops->getLDataManager()->getLData("X", finest_ln);
-
+            
             std::vector<std::vector<double>> particle_COM = ib_method_ops->getCurrentStructureCOM();
-            double particle_rad = input_db -> getDouble("R0");
             for(unsigned int particle_idx = 0; particle_idx < particle_COM.size(); particle_idx++){ //bug
                 if((particle_COM[particle_idx][0]-particle_rad) < 0.0 || (particle_COM[particle_idx][0]+particle_rad) > 2.0
                     || (particle_COM[particle_idx][1]-particle_rad) < 0.0 || (particle_COM[particle_idx][1]+particle_rad) > 2.0){
-                        const std::string particle_name = "cylinder2d_" + std::to_string(particle_idx);
-                        const int struct_id = ib_method_ops->getLDataManager()->getLagrangianStructureID(particle_name, finest_ln);
-                        ib_method_ops->getLDataManager()->inactivateLagrangianStructures(std::vector<int>{struct_id}, finest_ln);
+                        ib_method_ops->getLDataManager()->inactivateLagrangianStructures(std::vector<int>{particle_idx}, finest_ln);
                     }
             }                     
             /************************************************************************************************************************/

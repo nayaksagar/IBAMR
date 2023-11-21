@@ -77,6 +77,7 @@ public:
                    SAMRAI::tbox::Pointer<SAMRAI::hier::PatchHierarchy<NDIM> > patch_hierarchy,
                    SAMRAI::tbox::Pointer<SAMRAI::tbox::Database> input_db,
                    IBAMR::ConstraintIBMethod* constraint_ib_method,
+                   std::vector<std::vector<int>> particle_lag_relation_vec,
                    const std::string solver_type = "STAGGERED");
 
     /*!
@@ -157,6 +158,11 @@ private:
      * Pointer to ConstraintIBMethod
      */
     IBAMR::ConstraintIBMethod* d_constraint_ib_method;
+
+    /*!
+    * Vector that stores which lagrangian particle is in which particle
+    */
+   std::vector<std::vector<int>> d_particle_lag_relation;
 
     /*!
      * Fluid solver type.
