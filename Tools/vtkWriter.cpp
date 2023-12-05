@@ -18,8 +18,8 @@ int main() {
 	    continue;
 	
         std::vector<double> coord = {x,y,1.0};
-	coordinates.push_back(coord);
-     }	
+	    coordinates.push_back(coord);
+    }	
 
 
     // Output VTK file
