@@ -9,3 +9,9 @@ restart_IB2d
 *.gif
 *.avi
 *.jpeg
+*.vtk
+stamp-debug
+main2D
+*.o
+*.out
+
