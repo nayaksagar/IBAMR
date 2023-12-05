@@ -221,7 +221,7 @@ ForceProjector::calculateLagrangianBodyForce(const double /*new_time*/, const do
 
                 if(within_particle){
                     
-                    for (int d = 0; d < NDIM; ++d) F[d] = d_rho_fluid * d_grav_const[d] * d_vol_lag_pt;
+                    for (int d = 0; d < NDIM; ++d) F[d] = d_rho_fluid * d_grav_const[d] * M_PI * 0.01 * 0.01; //d_vol_lag_pt;
 
                     //if it lies within the particle calculate force acting on it due to neighboring grains
                     if(num_grains > 0){
@@ -230,7 +230,7 @@ ForceProjector::calculateLagrangianBodyForce(const double /*new_time*/, const do
                             grain_COM[0] = grain_com_x[grain_index];
                             grain_COM[1] = grain_com_y[grain_index];
                             Fpg  = computeParticleGrainForce(particle_COM, grain_COM, grain_rad[grain_index]);
-                            for (int d = 0; d < NDIM; ++d) F[d] += Fpg[d] * d_vol_lag_pt;
+                            for (int d = 0; d < NDIM; ++d) F[d] += Fpg[d] * M_PI * 0.01 * 0.01; //d_vol_lag_pt;
                             // std::cout<<"grain force being computed"<<std::endl;
                         }
                     }
@@ -246,7 +246,7 @@ ForceProjector::calculateLagrangianBodyForce(const double /*new_time*/, const do
                                 neigh_part_COM[0] = structure_COM[neigh_part_index][0];
                                 neigh_part_COM[1] = structure_COM[neigh_part_index][1];
                                 Fpp  = computeParticleParticleForce(particle_COM, neigh_part_COM); //bug: all particles are assumed to be of same radius
-                                for (int d = 0; d < NDIM; ++d) F[d] += Fpp[d] * d_vol_lag_pt;
+                                for (int d = 0; d < NDIM; ++d) F[d] += Fpp[d] * M_PI * 0.01 * 0.01; //d_vol_lag_pt;
                                 // std::cout<<"particle force being computed"<<std::endl;
                             }
                         }
@@ -279,7 +279,7 @@ ForceProjector::calculateLagrangianBodyForce(const double /*new_time*/, const do
 
                     if(near_wall){
                         Fpw = computeParticleWallForce(particle_COM, wall_pos, wall);
-                        for (int d = 0; d < NDIM; ++d) F[d] += Fpw[d] * d_vol_lag_pt;
+                        for (int d = 0; d < NDIM; ++d) F[d] += Fpw[d] * M_PI * 0.01 * 0.01; //d_vol_lag_pt;
                     }
 
                 }

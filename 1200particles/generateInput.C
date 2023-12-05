@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
             destinationFile << " p_"<<i<<" {  \n	structure_names         \t = \"p_"<<i<<"\" \n";
             destinationFile << "\tstructure_levels                 =  MAX_LEVELS - 1 \n";
             destinationFile << "\tcalculate_translational_momentum = 1,1,0 \n";
-            destinationFile << "\tcalculate_rotational_momentum    = 0,0,1 \n";
+            destinationFile << "\tcalculate_rotational_momentum    = 0,0,0 \n";
             destinationFile << "\tlag_position_update_method       = \"CONSTRAINT_VELOCITY\"\n";
             destinationFile << "\ttagged_pt_identifier             = MAX_LEVELS - 1, 0 \n } \n\n";
         }

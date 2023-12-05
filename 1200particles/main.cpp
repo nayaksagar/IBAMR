@@ -81,11 +81,11 @@ generate_structure(const unsigned int& strct_num,
                      std::vector<IBTK::Point>& vertex_posn,
                      void* /*ctx*/)
 {
-    const double DIAMETER = 0.02;
-    double RADIUS = 0.5 * DIAMETER;
-    const double Lx = 3.0;
-    const double Nx = 96*4;
-    double dx = Lx/Nx;
+    // const double DIAMETER = 0.02;
+    // double RADIUS = 0.5 * DIAMETER;
+    // const double Lx = 3.0;
+    // const double Nx = 96*4;
+    // double dx = Lx/Nx;
   
     if ( strct_num == num_structures-1){
         int vertex_id = 0; 
@@ -98,45 +98,51 @@ generate_structure(const unsigned int& strct_num,
         IBTK::Point& X = vertex_posn[vertex_id];
         porousData >> X(0);
         porousData >> X(1);
-        if(X(0) < 0.0 || X(0) > 3.0 || X(1) < 0.0 || X(1) > 2.0)
-        std::cout << "hi........." << i << "\t" << X(0) << "\t" << X(1) << std::endl;
-	    vertex_id++;
+        // if(X(0) < 0.0 || X(0) > 3.0 || X(1) < 0.0 || X(1) > 2.0)
+        // std::cout << "hi........." << i << "\t" << X(0) << "\t" << X(1) << std::endl;
+            vertex_id++;
        }
        porousData.close();
     }
-    else{  
-    double radius, circumference;
-//    std::cout << "Structure No.: " << strct_num << "\tXCOM: " << xcom[strct_num] << "\tYCOM: " << ycom[strct_num] << std::endl;
-    int num_surf_pts = 0;
-    radius = RADIUS;
-    while(radius>0.0/*0.75*RADIUS*/){ //job is only to count number of vertices
-        circumference = 2.0*M_PI*radius;
-        num_surf_pts = round(circumference/dx);
-        num_vertices = num_vertices + num_surf_pts;
-        radius = radius - dx;
-    }
+   else{
+    num_vertices = 1;
     vertex_posn.resize(num_vertices);
+    IBTK::Point& X = vertex_posn[0];
+    X(0) = xcom[strct_num];
+    X(1) = ycom[strct_num];
 
-    radius = RADIUS;
-    double dtheta, theta;
-    int vertex_id = 0;
+    // double radius, circumference;
+//    std::cout << "Structure No.: " << strct_num << "\tXCOM: " << xcom[strct_num] << "\tYCOM: " << ycom[strct_num] << std::endl;
+    // int num_surf_pts = 0;
+    // radius = RADIUS;
+    // while(radius>0.0/*0.75*RADIUS*/){ //job is only to count number of vertices
+    //     circumference = 2.0*M_PI*radius;
+    //     num_surf_pts = round(circumference/dx);
+    //     num_vertices = num_vertices + num_surf_pts;
+    //     radius = radius - dx;
+    // }
+    // vertex_posn.resize(num_vertices);
+
+    // radius = RADIUS;
+    // double dtheta, theta;
+    // int vertex_id = 0;
     
-    while(radius>0.0/*0.75*RADIUS*/){
-        circumference = 2.0*M_PI*radius;
-        num_surf_pts = round(circumference/dx);
-        dtheta = (2.0*M_PI)/num_surf_pts;
-        for(int k=1; k<=num_surf_pts; k++){
-            theta = (k-1)*dtheta;
-            IBTK::Point& X = vertex_posn[vertex_id];
-            X(0) = xcom[strct_num] + radius*cos(theta);   
-            X(1) = ycom[strct_num] + radius*sin(theta);
-            if(X(0) < 0.0 || X(0) > 3.0 || X(1) < 0.0 || X(1) > 2.0)
-            std::cout << k << "\t" << X(0) << "\t" << X(1) << std::endl;
-            vertex_id++;
-        }
-        // std::cout << "\n\n" << std::endl;
-        radius = radius - dx;
-    }
+    // while(radius>0.0/*0.75*RADIUS*/){
+    //     circumference = 2.0*M_PI*radius;
+    //     num_surf_pts = round(circumference/dx);
+    //     dtheta = (2.0*M_PI)/num_surf_pts;
+    //     for(int k=1; k<=num_surf_pts; k++){
+    //         theta = (k-1)*dtheta;
+    //         IBTK::Point& X = vertex_posn[vertex_id];
+    //         X(0) = xcom[strct_num] + radius*cos(theta);   
+    //         X(1) = ycom[strct_num] + radius*sin(theta);
+    //         if(X(0) < 0.0 || X(0) > 3.0 || X(1) < 0.0 || X(1) > 2.0)
+    //         std::cout << k << "\t" << X(0) << "\t" << X(1) << std::endl;
+    //         vertex_id++;
+    //     }
+    //     // std::cout << "\n\n" << std::endl;
+    //     radius = radius - dx;
+    // }
    } 
   
     return;
