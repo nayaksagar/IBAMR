@@ -10,8 +10,10 @@ restart_IB2d
 *.avi
 *.jpeg
 *.vtk
-stamp-debug
-main2D
+*stamp-debug
+*main2D
 *.o
 *.out
-
+*SedimentingCylinder_COM_coordinates
+vtk
+1200particles/main2D
