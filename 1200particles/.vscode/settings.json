@@ -1,5 +1,8 @@
 {
     "files.associations": {
-        "random": "cpp"
+        "random": "cpp",
+        "generateInput.C": "cpp",
+        "packing.C": "cpp",
+        "particleGenerator.C": "cpp"
     }
 }
