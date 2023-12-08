@@ -84,7 +84,7 @@ int main(int argc, char *argv[]){
       }
     }
 
-   
+    // writing shell script 
     std::ofstream bash("result.sh");
     bash << "rm *.mp4" << std::endl;
     bash << "for i in {1.." << repeat << "};" << std::endl;
