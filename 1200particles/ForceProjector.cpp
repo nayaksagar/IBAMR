@@ -253,7 +253,7 @@ ForceProjector::calculateLagrangianBodyForce(const double /*new_time*/, const do
                     }
                 
                     //check if particle is near any wall, if yes, which wall (left, right or bottom)
-                    double left = 0.0, right = 3.0, bottom = 0.0, top = 2.0, wall_pos;
+                    double left = 0.0, right = 4.0, bottom = 0.0, top = 2.0, wall_pos;
                     int wall;
                     bool near_wall = false;
                     if(2.0*fabs(left - particle_COM[0]) < particle_rad + d_xi){

@@ -39,31 +39,64 @@ Circle generateRandomCircle(double domainSize, double minRadius, double maxRadiu
     return circle;
 }
 
+bool pointWithinCircle(const Circle& c1, const Circle& c2){
+     double dx = c1.x - c2.x;
+     double dy = c1.y - c2.y;
+     double dist = std::sqrt(dx*dx + dy*dy);
+     return dist < c1.radius;
+}
+
 // Function to generate a porous media using circle packing
 std::vector<Circle> generatePorousMedia(double domainSize, double targetPorosity, double minRadius, double maxRadius) {
     std::vector<Circle> circles;
     double totalArea = domainSize * domainSize;
     double targetArea = totalArea * (1.0 - targetPorosity);
-
+    
+    double currentArea = 0.0;
     while (true) {
         Circle circle = generateRandomCircle(domainSize, minRadius, maxRadius);
 
         bool isValid = true;
         for (const Circle& existingCircle : circles) {
-            if (circlesOverlap(existingCircle, circle) || !circleWithinBounds(circle, domainSize)) {
+            if (/*circlesOverlap(existingCircle, circle) ||*/ pointWithinCircle(existingCircle, circle) || !circleWithinBounds(circle, domainSize)) {
                 isValid = false;
                 break;
             }
         }
 
         if (isValid) {
-            circles.push_back(circle); 
+            double contributingArea = M_PI * circle.radius * circle.radius;
 
+            for (const Circle& existingCircle : circles) {
+                //if circle overlaps with others, subtract the overlapping area
+                if(circlesOverlap(existingCircle, circle)){
+                  double dx = existingCircle.x - circle.x;
+     		      double dy = existingCircle.y - circle.y;
+                  double dist = std::sqrt(dx*dx + dy*dy);
+
+               	  double d1 = (std::pow(existingCircle.radius,2) - std::pow(circle.radius,2) +  dist*dist)/(2.0*dist);
+                  double f1 = std::sqrt(existingCircle.radius * existingCircle.radius - d1 * d1);
+                  double theta = std::atan(f1/d1);
+                  double totArea = theta * existingCircle.radius * existingCircle.radius / 2.0;
+                  double A1 = totArea - 0.5 * d1 * f1;
+
+                  double d2 = dist - d1;
+                  theta = std::atan(f1/d2);
+                  totArea = theta * existingCircle.radius * existingCircle.radius / 2.0;
+                  double A2 = totArea - 0.5 * d2 * f1;
+
+                  double overlapArea = 2.0 * (A1 + A2);
+                  contributingArea -= overlapArea;
+               } 
+            }
+           
+            currentArea += contributingArea;
             // Check if target area is reached
-            double currentArea = 0;
+            /*double currentArea = 0;
             for (const Circle& existingCircle : circles) {
                 currentArea += M_PI * existingCircle.radius * existingCircle.radius;
-            }
+            }*/
+            circles.push_back(circle);
             if (currentArea >= targetArea) {
                 break;
             }
@@ -75,7 +108,7 @@ std::vector<Circle> generatePorousMedia(double domainSize, double targetPorosity
 
 int main() {
     double domainSize = 2.0; // Size of the square domain
-    double targetPorosity = 0.6; // Target porosity (between 0 and 1)
+    double targetPorosity = 0.5; // Target porosity (between 0 and 1)
     double minRadius = 0.05; // Minimum circle radius
     double maxRadius = 0.1; // Maximum circle radius
 
@@ -103,21 +136,38 @@ int main() {
 
     std::ofstream porous_file;
     porous_file.open("porous.vertex");
+
+    int iterator = 0;
     for(const Circle& circle: porousMedia){
-        radius = circle.radius;
-        circle_num++;
-        while(radius>0.0/*0.75*circle.radius*/){
-           circumference = 2.0*M_PI*radius;
-           num_surf_pts = round(circumference/dx);
-           dtheta = (2.0*M_PI)/num_surf_pts;
-           for(int i=1; i<=num_surf_pts; i++){
-             theta = (i-1)*dtheta;
-             X = circle.x + radius*cos(theta);
-             Y = circle.y + radius*sin(theta);
-             porous_file << pm_pos_x+X << "\t" << pm_pos_y+Y << "\n";
-           }
-           radius = radius - dx;
-        }
+
+        
+
+            // Perform operations on otherCircle
+            radius = circle.radius;
+            circle_num++;
+            while(radius>0.0/*0.75*circle.radius*/){
+            circumference = 2.0*M_PI*radius;
+            num_surf_pts = round(circumference/dx);
+            dtheta = (2.0*M_PI)/num_surf_pts;
+            for(int i=1; i<=num_surf_pts; i++){
+                theta = (i-1)*dtheta;
+                X = circle.x + radius*cos(theta);
+                Y = circle.y + radius*sin(theta);
+
+                bool overlaps = false;
+                // Loop over circles before the current circle
+                for (int i = 0; i < iterator; ++i) {
+                  const Circle& prevCircles = porousMedia[i];
+                  if(std::pow((X - prevCircles.x),2) + std::pow((Y - prevCircles.y),2) <= prevCircles.radius*prevCircles.radius)
+                    overlaps = true;
+                }
+                if(!overlaps)
+                    porous_file << pm_pos_x+X << "\t" << pm_pos_y+Y << "\n";
+            }
+            radius = radius - dx;
+            }
+
+        iterator++;
     }
     porous_file.close();
     

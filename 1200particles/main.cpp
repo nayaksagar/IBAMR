@@ -401,7 +401,7 @@ main(int argc, char* argv[])
             std::vector<std::vector<double>> particle_COM = ib_method_ops->getCurrentStructureCOM();
             double particle_rad = input_db -> getDouble("particle_radius");
             for(unsigned int particle_idx = 0; particle_idx < particle_COM.size(); particle_idx++){ //bug
-                if((particle_COM[particle_idx][0]-particle_rad) < 0.0 || (particle_COM[particle_idx][0]+particle_rad) > 3.0
+                if((particle_COM[particle_idx][0]-particle_rad) < 0.0 || (particle_COM[particle_idx][0]+particle_rad) > 4.0
                     /*|| (particle_COM[particle_idx][1]-particle_rad) < 0.0 || (particle_COM[particle_idx][1]+particle_rad) > 2.0*/){
                         // const std::string particle_name = "p_" + std::to_string(particle_idx);
                         // const int struct_id = ib_method_ops->getLDataManager()->getLagrangianStructureID(particle_name, finest_ln);
